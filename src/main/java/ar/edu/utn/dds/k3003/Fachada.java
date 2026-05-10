@@ -257,9 +257,19 @@ public class Fachada implements FachadaDonaciones {
     Identificador identificador = identificadorRepository.findById(identificadorID)
             .orElseThrow(() -> new RuntimeException("Identificador no encontrado"));
 
+    TipoIdentificadorEnum tipoDTO;
+
+    if (identificador.getTipo() == TipoIdentificador.CODIGO_QR) {
+      tipoDTO = TipoIdentificadorEnum.QR;
+    } else if (identificador.getTipo() == TipoIdentificador.CODIGO_BARRAS) {
+      tipoDTO = TipoIdentificadorEnum.CODIGODEBARRAS;
+    } else {
+      throw new RuntimeException("Tipo de identificador invalido");
+    }
+
     return new IdentificadorDTO(
             identificador.getId(),
-            TipoIdentificadorEnum.valueOf(identificador.getTipo().name()),
+            tipoDTO,
             identificador.getDescripcion()
     );
   }
