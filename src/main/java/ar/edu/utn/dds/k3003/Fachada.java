@@ -53,7 +53,7 @@ public class Fachada implements FachadaDonaciones {
       throw new RuntimeException("La donación ya fue registrada");
     }
 
-    fachadaDonadoresYEntidades.buscarDonadorPorID(dto.donadorID());
+    
 
     // para satisfacer ese test
     if (fachadaLogistica != null) {
