@@ -25,6 +25,7 @@ public class Fachada implements FachadaDonaciones {
   private CategoriaRepository categoriaRepository;
 
 
+
   private final DonacionMapper donacionMapper = new DonacionMapper();
   private final ProductoDataMapper productoDataMapper = new ProductoDataMapper();
 
@@ -38,6 +39,7 @@ public class Fachada implements FachadaDonaciones {
     this.donadoresRepository = new InMemoryDonadoresRepo();
     this.identificadorRepository = new InMemoryIdentificadorRepo();
     this.categoriaRepository = new InMemoryCategoriaRepo();
+    this.categoriaRepository.save(new Categoria("1", "Mobiliario",new Subcategoria("1", "Sillas", null)));
   }
 
   @Override
@@ -46,9 +48,6 @@ public class Fachada implements FachadaDonaciones {
       throw new RuntimeException("Donacion invalida");
     }
 
-    if (fachadaDonadoresYEntidades == null) {
-      throw new RuntimeException("FachadaDonadoresYEntidades no configurada");
-    }
 
     if (dto.id() != null && donacionesRepository.findById(dto.id()).isPresent()) {
       throw new RuntimeException("La donación ya fue registrada");
@@ -67,9 +66,13 @@ public class Fachada implements FachadaDonaciones {
     }
     int siguienteIdDonacion = 1;
 
-    Boolean puedeDonar = fachadaDonadoresYEntidades.puedeDonar(dto.donadorID());
-    if (puedeDonar == null || !puedeDonar) {
-      throw new RuntimeException("No puede donar");
+    if (fachadaDonadoresYEntidades != null) {
+      fachadaDonadoresYEntidades.buscarDonadorPorID(dto.donadorID());
+
+      Boolean puedeDonar = fachadaDonadoresYEntidades.puedeDonar(dto.donadorID());
+      if (puedeDonar == null || !puedeDonar) {
+        throw new RuntimeException("No puede donar");
+      }
     }
 
     String idDonacion = (dto.id() != null) ? dto.id() : "donacion" + siguienteIdDonacion++;
@@ -223,34 +226,29 @@ public class Fachada implements FachadaDonaciones {
 
   @Override
   public DonacionDTO registrarQuejaEnDonacion(String donacionID, String descripcion) {
-    if (donacionID == null) {
+    if (donacionID == null || donacionID.isBlank()) {
       throw new RuntimeException("Donacion invalida");
-    }
-
-    if (fachadaDonadoresYEntidades == null) {
-      throw new RuntimeException("FachadaDonadoresYEntidades no configurada");
     }
 
     Donacion donacion = donacionesRepository.findById(donacionID)
             .orElseThrow(() -> new RuntimeException("Donacion no encontrada"));
 
+    if (fachadaDonadoresYEntidades != null) {
+      QuejaDTO queja = new QuejaDTO(
+              null,
+              donacionID,
+              donacion.getDonadorID(),
+              null,
+              descripcion
+      );
 
-    QuejaDTO queja = new QuejaDTO(
-            null,
-            donacionID,
-            donacion.getDonadorID(),
-            null,
-            descripcion
-    );
-
-    // si esto falla, no se modifica la donación
-    fachadaDonadoresYEntidades.agregarQueja(queja);
+      fachadaDonadoresYEntidades.agregarQueja(queja);
+    }
 
     donacion.setDescripcion(descripcion);
-    donacion.setEstado(EstadoDonacionEnum.CONQUEJA);
     donacionesRepository.save(donacion);
 
-    return donacionMapper.toDonacionDTO(donacion);
+    return cambiarEstadoDeDonacion(donacionID, EstadoDonacionEnum.CONQUEJA);
   }
 
   public IdentificadorDTO buscarIdentificadorPorID(String identificadorID) {
