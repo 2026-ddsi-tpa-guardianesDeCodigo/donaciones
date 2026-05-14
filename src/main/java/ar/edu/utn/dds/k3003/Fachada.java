@@ -117,7 +117,16 @@ public class Fachada implements FachadaDonaciones {
     }
 
     Categoria categoria = categoriaRepository.findById(dto.categoriaID())
-            .orElseThrow(() -> new RuntimeException("Categoria no encontrada"));
+            .orElseGet(() -> {
+              Categoria nuevaCategoria = new Categoria(
+                      dto.categoriaID(),
+                      "Categoria " + dto.categoriaID(),
+                      null
+              );
+
+              categoriaRepository.save(nuevaCategoria);
+              return nuevaCategoria;
+            });
 
     Identificador identificador = identificadorRepository.findById(dto.identificadorID())
             .orElseThrow(() -> new RuntimeException("Identificador no encontrado"));
