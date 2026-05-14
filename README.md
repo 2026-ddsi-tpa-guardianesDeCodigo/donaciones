@@ -2,19 +2,19 @@
 # 🧪 2026 - Trabajo Práctico Anual
 
 ## 👤 Datos del Alumno
-- **Nombre:**
-- **Apellido:**
+- **Nombre:** Juan Patricio 
+- **Apellido:** Amitrano
 
 ---
 
 🧩 Componente Desarrollado
 -
-
+    Donaciones 
 ---
 
 🧩 Link al despliegue en Render
 -
-
+    
 ---
 
 ### ⚠️ Importante

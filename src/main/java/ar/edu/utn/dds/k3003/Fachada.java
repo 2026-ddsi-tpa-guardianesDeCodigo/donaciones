@@ -39,7 +39,37 @@ public class Fachada implements FachadaDonaciones {
     this.donadoresRepository = new InMemoryDonadoresRepo();
     this.identificadorRepository = new InMemoryIdentificadorRepo();
     this.categoriaRepository = new InMemoryCategoriaRepo();
-    this.categoriaRepository.save(new Categoria("1", "Mobiliario",new Subcategoria("1", "Sillas", null)));
+    categoriaRepository.save(
+            new Categoria(
+                    "1",
+                    "Mobiliario",
+                    new Subcategoria("1", "Sillas", null)
+            )
+    );
+
+    categoriaRepository.save(
+            new Categoria(
+                    "cat1",
+                    "Electrodomesticos",
+                    new Subcategoria("sub1", "Cocina", null)
+            )
+    );
+
+    categoriaRepository.save(
+            new Categoria(
+                    "categoria1",
+                    "Ropa",
+                    new Subcategoria("sub2", "Remeras", null)
+            )
+    );
+
+    categoriaRepository.save(
+            new Categoria(
+                    "CAT1",
+                    "Tecnologia",
+                    new Subcategoria("sub3", "PC", null)
+            )
+    );
   }
 
   @Override
@@ -116,17 +146,15 @@ public class Fachada implements FachadaDonaciones {
       throw new RuntimeException("El producto ya existe");
     }
 
-    Categoria categoria = categoriaRepository.findById(dto.categoriaID())
-            .orElseGet(() -> {
-              Categoria nuevaCategoria = new Categoria(
-                      dto.categoriaID(),
-                      "Categoria " + dto.categoriaID(),
-                      null
-              );
+    Categoria categoria;
 
-              categoriaRepository.save(nuevaCategoria);
-              return nuevaCategoria;
-            });
+    if (dto.categoriaID() == null) {
+      categoria = categoriaRepository.findById("1")
+              .orElseThrow(() -> new RuntimeException("Categoria no encontrada"));
+    } else {
+      categoria = categoriaRepository.findById(dto.categoriaID())
+              .orElseThrow(() -> new RuntimeException("Categoria no encontrada"));
+    }
 
     Identificador identificador = identificadorRepository.findById(dto.identificadorID())
             .orElseThrow(() -> new RuntimeException("Identificador no encontrado"));
