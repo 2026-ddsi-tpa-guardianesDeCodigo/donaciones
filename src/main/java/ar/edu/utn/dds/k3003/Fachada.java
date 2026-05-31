@@ -1,75 +1,41 @@
 package ar.edu.utn.dds.k3003;
 
 import ar.edu.utn.dds.k3003.catedra.dtos.donaciones.*;
-import ar.edu.utn.dds.k3003.catedra.dtos.donadoresYEntidades.*;
+import ar.edu.utn.dds.k3003.catedra.dtos.donadoresYEntidades.QuejaDTO;
+import ar.edu.utn.dds.k3003.catedra.fachadas.FachadaDonaciones;
 import ar.edu.utn.dds.k3003.catedra.fachadas.FachadaDonadoresYEntidades;
+import ar.edu.utn.dds.k3003.catedra.fachadas.FachadaLogistica;
 import ar.edu.utn.dds.k3003.model.*;
 import ar.edu.utn.dds.k3003.repositories.*;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDate;
 import java.util.List;
 
-//package ar.edu.utn.dds.k3003.repositories;
-
-import ar.edu.utn.dds.k3003.catedra.fachadas.FachadaDonaciones;
-import ar.edu.utn.dds.k3003.catedra.fachadas.FachadaLogistica;
-
-import java.time.LocalDate;
 @Component
 public class Fachada implements FachadaDonaciones {
 
-  private DonacionesRepository donacionesRepository;
-  private ProductoRepository productoRepository;
-  private DonadoresRepository donadoresRepository;
-  private IdentificadorRepository identificadorRepository;
-  private CategoriaRepository categoriaRepository;
+  private  DonacionesRepository donacionesRepository;
+  private  ProductoRepository productoRepository;
+  private  IdentificadorRepository identificadorRepository;
+  private  CategoriaRepository categoriaRepository;
 
-
-
-  private final DonacionMapper donacionMapper = new DonacionMapper();
-  private final ProductoDataMapper productoDataMapper = new ProductoDataMapper();
+  private  DonacionMapper donacionMapper = new DonacionMapper();
+  private  ProductoDataMapper productoDataMapper = new ProductoDataMapper();
 
   private FachadaDonadoresYEntidades fachadaDonadoresYEntidades;
   private FachadaLogistica fachadaLogistica;
 
 
-  public Fachada() {
-    this.donacionesRepository = new InMemoryDonacionesRepo();
-    this.productoRepository = new InMemoryProductoRepo();
-    this.donadoresRepository = new InMemoryDonadoresRepo();
-    this.identificadorRepository = new InMemoryIdentificadorRepo();
-    this.categoriaRepository = new InMemoryCategoriaRepo();
-    categoriaRepository.save(
-            new Categoria(
-                    "1",
-                    "Mobiliario",
-                    new Subcategoria("1", "Sillas", null)
-            )
-    );
-
-    categoriaRepository.save(
-            new Categoria(
-                    "cat1",
-                    "Electrodomesticos",
-                    new Subcategoria("sub1", "Cocina", null)
-            )
-    );
-
-    categoriaRepository.save(
-            new Categoria(
-                    "categoria1",
-                    "Ropa",
-                    new Subcategoria("sub2", "Remeras", null)
-            )
-    );
-
-    categoriaRepository.save(
-            new Categoria(
-                    "CAT1",
-                    "Tecnologia",
-                    new Subcategoria("sub3", "PC", null)
-            )
-    );
+  public Fachada(
+          DonacionesRepository donacionesRepository,
+          ProductoRepository productoRepository,
+          IdentificadorRepository identificadorRepository,
+          CategoriaRepository categoriaRepository) {
+    this.donacionesRepository = donacionesRepository;
+    this.productoRepository = productoRepository;
+    this.identificadorRepository = identificadorRepository;
+    this.categoriaRepository = categoriaRepository;
   }
 
   @Override
@@ -78,14 +44,10 @@ public class Fachada implements FachadaDonaciones {
       throw new RuntimeException("Donacion invalida");
     }
 
-
     if (dto.id() != null && donacionesRepository.findById(dto.id()).isPresent()) {
       throw new RuntimeException("La donación ya fue registrada");
     }
 
-
-
-    // para satisfacer ese test
     if (fachadaLogistica != null) {
       fachadaLogistica.gestionarDonacion(
               dto.depositoID(),
@@ -94,7 +56,6 @@ public class Fachada implements FachadaDonaciones {
               dto.cantidad()
       );
     }
-    int siguienteIdDonacion = 1;
 
     if (fachadaDonadoresYEntidades != null) {
       fachadaDonadoresYEntidades.buscarDonadorPorID(dto.donadorID());
@@ -105,7 +66,7 @@ public class Fachada implements FachadaDonaciones {
       }
     }
 
-    String idDonacion = (dto.id() != null) ? dto.id() : "donacion" + siguienteIdDonacion++;
+    String idDonacion = dto.id();
 
     Producto producto = buscarProductoInternoPorID(dto.productoID());
 
@@ -146,15 +107,8 @@ public class Fachada implements FachadaDonaciones {
       throw new RuntimeException("El producto ya existe");
     }
 
-    Categoria categoria;
-
-    if (dto.categoriaID() == null) {
-      categoria = categoriaRepository.findById("1")
-              .orElseThrow(() -> new RuntimeException("Categoria no encontrada"));
-    } else {
-      categoria = categoriaRepository.findById(dto.categoriaID())
-              .orElseThrow(() -> new RuntimeException("Categoria no encontrada"));
-    }
+    Categoria categoria = categoriaRepository.findById(dto.categoriaID())
+            .orElseThrow(() -> new RuntimeException("Categoria no encontrada"));
 
     Identificador identificador = identificadorRepository.findById(dto.identificadorID())
             .orElseThrow(() -> new RuntimeException("Identificador no encontrado"));
@@ -176,7 +130,11 @@ public class Fachada implements FachadaDonaciones {
     return productoDataMapper.toDTO(producto);
   }
 
-  private boolean esValidoSegunIdentificador(String nombre, String descripcion, Identificador identificador) {
+  private boolean esValidoSegunIdentificador(
+          String nombre,
+          String descripcion,
+          Identificador identificador) {
+
     if (identificador.getTipo() == TipoIdentificador.CODIGO_BARRAS) {
       return contarPalabras(descripcion) >= 3;
     }
@@ -232,11 +190,13 @@ public class Fachada implements FachadaDonaciones {
 
     EstadoDonacionEnum estadoActual = donacion.getEstado();
 
-    if (estado == EstadoDonacionEnum.ACEPTADA && estadoActual != EstadoDonacionEnum.INGRESADA) {
+    if (estado == EstadoDonacionEnum.ACEPTADA
+            && estadoActual != EstadoDonacionEnum.INGRESADA) {
       throw new RuntimeException("Transicion invalida: para aceptar, la donacion debe estar INGRESADA");
     }
 
-    if (estado == EstadoDonacionEnum.CONQUEJA && estadoActual != EstadoDonacionEnum.ACEPTADA) {
+    if (estado == EstadoDonacionEnum.CONQUEJA
+            && estadoActual != EstadoDonacionEnum.ACEPTADA) {
       throw new RuntimeException("Transicion invalida: para registrar queja, la donacion debe estar ACEPTADA");
     }
 
@@ -292,19 +252,11 @@ public class Fachada implements FachadaDonaciones {
     Identificador identificador = identificadorRepository.findById(identificadorID)
             .orElseThrow(() -> new RuntimeException("Identificador no encontrado"));
 
-    TipoIdentificadorEnum tipoDTO;
-
-    if (identificador.getTipo() == TipoIdentificador.CODIGO_QR) {
-      tipoDTO = TipoIdentificadorEnum.QR;
-    } else if (identificador.getTipo() == TipoIdentificador.CODIGO_BARRAS) {
-      tipoDTO = TipoIdentificadorEnum.CODIGODEBARRAS;
-    } else {
-      throw new RuntimeException("Tipo de identificador invalido");
-    }
-
     return new IdentificadorDTO(
             identificador.getId(),
-            tipoDTO,
+            identificador.getTipo() == TipoIdentificador.CODIGO_QR
+                    ? TipoIdentificadorEnum.QR
+                    : TipoIdentificadorEnum.CODIGODEBARRAS,
             identificador.getDescripcion()
     );
   }
@@ -328,13 +280,91 @@ public class Fachada implements FachadaDonaciones {
 
     identificadorRepository.save(identificador);
 
-    return new IdentificadorDTO(
-            identificador.getId(),
-            identificador.getTipo() == TipoIdentificador.CODIGO_QR
-                    ? TipoIdentificadorEnum.QR
-                    : TipoIdentificadorEnum.CODIGODEBARRAS,
-            identificador.getDescripcion()
+    return buscarIdentificadorPorID(identificador.getId());
+  }
+
+  public CategoriaDTO agregarCategoria(CategoriaDTO dto) {
+    if (dto == null) {
+      throw new RuntimeException("Categoria invalida");
+    }
+
+    if (dto.id() != null && categoriaRepository.findById(dto.id()).isPresent()) {
+      throw new RuntimeException("La categoria ya existe");
+    }
+
+    Subcategoria subcategoria = null;
+
+    Categoria categoria = new Categoria(
+            dto.id(),
+            dto.nombre(),
+            dto.descripcion(),
+            subcategoria
     );
+
+    categoriaRepository.save(categoria);
+
+    return new CategoriaDTO(
+            categoria.getId(),
+            categoria.getNombre(),
+            categoria.getDescripcion(),
+            null
+    );
+  }
+
+  public CategoriaDTO buscarCategoriaPorID(String categoriaID) {
+    Categoria categoria = categoriaRepository.findById(categoriaID)
+            .orElseThrow(() -> new RuntimeException("Categoria no encontrada"));
+
+    String subcategoriaID = categoria.getSubcategoria() != null
+            ? categoria.getSubcategoria().getId()
+            : null;
+
+    return new CategoriaDTO(
+            categoria.getId(),
+            categoria.getNombre(),
+            categoria.getDescripcion(),
+            subcategoriaID
+    );
+  }
+  public void limpiarBase() {
+    donacionesRepository.deleteAll();
+    productoRepository.deleteAll();
+    categoriaRepository.deleteAll();
+    identificadorRepository.deleteAll();
+  }
+  public List<IdentificadorDTO> listarIdentificadores() {
+    return identificadorRepository.findAll().stream()
+            .map(i -> new IdentificadorDTO(
+                    i.getId(),
+                    i.getTipo() == TipoIdentificador.CODIGO_QR
+                            ? TipoIdentificadorEnum.QR
+                            : TipoIdentificadorEnum.CODIGODEBARRAS,
+                    i.getDescripcion()
+            ))
+            .toList();
+  }
+
+  public List<CategoriaDTO> listarCategorias() {
+    return categoriaRepository.findAll().stream()
+            .map(c -> new CategoriaDTO(
+                    c.getId(),
+                    c.getNombre(),
+                    c.getDescripcion(),
+                    c.getSubcategoria() != null ? c.getSubcategoria().getId() : null
+            ))
+            .toList();
+  }
+
+  public List<ProductoDTO> listarProductos() {
+    return productoRepository.findAll().stream()
+            .map(productoDataMapper::toDTO)
+            .toList();
+  }
+
+  public List<DonacionDTO> listarDonaciones() {
+    return donacionesRepository.findAll().stream()
+            .map(donacionMapper::toDonacionDTO)
+            .toList();
   }
 
   @Override

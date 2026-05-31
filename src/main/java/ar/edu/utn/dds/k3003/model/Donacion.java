@@ -1,20 +1,33 @@
 package ar.edu.utn.dds.k3003.model;
 
 import ar.edu.utn.dds.k3003.catedra.dtos.donaciones.EstadoDonacionEnum;
-
-import ar.edu.utn.dds.k3003.catedra.dtos.donaciones.EstadoDonacionEnum;
+import jakarta.persistence.*;
 import java.time.LocalDate;
 
+@Entity
+@Table(name = "donaciones")
 public class Donacion {
 
+    @Id
     private String id;
+
     private String donadorID;
     private String depositoID;
     private String descripcion;
+
+    @ManyToOne
+    @JoinColumn(name = "producto_id")
     private Producto producto;
+
     private Integer cantidad;
+
+    @Enumerated(EnumType.STRING)
     private EstadoDonacionEnum estado;
+
     private LocalDate fecha;
+
+    public Donacion() {
+    }
 
     public Donacion(String id, String donadorID, String depositoID,
                     String descripcion, Producto producto,
@@ -69,6 +82,4 @@ public class Donacion {
     public void setDescripcion(String descripcion) {
         this.descripcion = descripcion;
     }
-
-
 }

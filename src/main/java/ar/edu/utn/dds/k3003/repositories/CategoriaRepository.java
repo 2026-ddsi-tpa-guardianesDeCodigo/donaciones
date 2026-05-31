@@ -1,12 +1,7 @@
 package ar.edu.utn.dds.k3003.repositories;
 
 import ar.edu.utn.dds.k3003.model.Categoria;
+import org.springframework.data.jpa.repository.JpaRepository;
 
-import java.util.Optional;
-
-public interface CategoriaRepository {
-
-    Optional<Categoria> findById(String id);
-
-    Categoria save(Categoria categoria);
+public interface CategoriaRepository extends JpaRepository<Categoria, String> {
 }

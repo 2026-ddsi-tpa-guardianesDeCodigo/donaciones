@@ -5,6 +5,8 @@ import ar.edu.utn.dds.k3003.catedra.dtos.donaciones.ProductoDTO;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/productos")
 public class ProductoController {
@@ -25,5 +27,10 @@ public class ProductoController {
     public ResponseEntity<ProductoDTO> buscarProductoPorID(@RequestParam String productoID) {
         ProductoDTO producto = fachada.buscarProductoPorID(productoID);
         return ResponseEntity.ok(producto);
+    }
+
+    @GetMapping("/all")
+    public ResponseEntity<List<ProductoDTO>> listarProductos() {
+        return ResponseEntity.ok(fachada.listarProductos());
     }
 }

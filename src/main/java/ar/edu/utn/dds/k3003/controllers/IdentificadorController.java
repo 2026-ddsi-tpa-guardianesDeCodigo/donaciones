@@ -5,6 +5,8 @@ import ar.edu.utn.dds.k3003.catedra.dtos.donaciones.IdentificadorDTO;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/identificadores")
 public class IdentificadorController {
@@ -25,5 +27,10 @@ public class IdentificadorController {
     public ResponseEntity<IdentificadorDTO> buscarIdentificadorPorID(@RequestParam String identificadorID) {
         IdentificadorDTO identificador = fachada.buscarIdentificadorPorID(identificadorID);
         return ResponseEntity.ok(identificador);
+    }
+
+    @GetMapping("/all")
+    public ResponseEntity<List<IdentificadorDTO>> listarIdentificadores() {
+        return ResponseEntity.ok(fachada.listarIdentificadores());
     }
 }
