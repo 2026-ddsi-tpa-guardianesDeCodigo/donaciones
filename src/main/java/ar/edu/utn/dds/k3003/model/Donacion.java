@@ -17,7 +17,7 @@ public class Donacion {
 
     @ManyToOne
     @JoinColumn(name = "producto_id")
-    private Producto producto;
+    private String productoID;
 
     private Integer cantidad;
 
@@ -30,18 +30,19 @@ public class Donacion {
     }
 
     public Donacion(String id, String donadorID, String depositoID,
-                    String descripcion, Producto producto,
+                    String descripcion, String productoID,
                     Integer cantidad, EstadoDonacionEnum estado,
                     LocalDate fecha) {
         this.id = id;
         this.donadorID = donadorID;
         this.depositoID = depositoID;
         this.descripcion = descripcion;
-        this.producto = producto;
+        this.productoID = productoID;
         this.cantidad = cantidad;
         this.estado = estado;
         this.fecha = fecha;
     }
+    
 
     public String getId() {
         return id;
@@ -59,8 +60,8 @@ public class Donacion {
         return descripcion;
     }
 
-    public Producto getProducto() {
-        return producto;
+    public String getProductoID() {
+        return productoID;
     }
 
     public Integer getCantidad() {

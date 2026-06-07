@@ -11,7 +11,7 @@ public class DonacionMapper {
                 donacion.getDonadorID(),
                 donacion.getDepositoID(),
                 donacion.getDescripcion(),
-                donacion.getProducto().getId(),
+                donacion.getProductoID(),
                 donacion.getCantidad(),
                 donacion.getEstado()
         );
