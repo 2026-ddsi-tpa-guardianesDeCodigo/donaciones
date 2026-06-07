@@ -1,7 +1,6 @@
 package ar.edu.utn.dds.k3003;
 
-import ar.edu.utn.dds.k3003.catedra.dtos.donaciones.DonacionDTO;
-import ar.edu.utn.dds.k3003.catedra.dtos.donaciones.EstadoDonacionEnum;
+import ar.edu.utn.dds.k3003.catedra.dtos.donaciones.*;
 import ar.edu.utn.dds.k3003.catedra.fachadas.FachadaDonaciones;
 import ar.edu.utn.dds.k3003.catedra.fachadas.FachadaDonadoresYEntidades;
 import ar.edu.utn.dds.k3003.catedra.fachadas.FachadaLogistica;
@@ -45,6 +44,42 @@ public class Fachada implements FachadaDonaciones {
     return donacionesService.registrarQuejaEnDonacion(donacionID, descripcion);
   }
 
+  public ProductoDTO agregarProducto(ProductoDTO dto) {
+    return donacionesService.agregarProducto(dto);
+  }
+
+  public ProductoDTO buscarProductoPorID(String productoID) {
+    return donacionesService.buscarProductoPorID(productoID);
+  }
+
+  public List<ProductoDTO> listarProductos() {
+    return donacionesService.listarProductos();
+  }
+
+  public CategoriaDTO agregarCategoria(CategoriaDTO dto) {
+    return donacionesService.agregarCategoria(dto);
+  }
+
+  public CategoriaDTO buscarCategoriaPorID(String categoriaID) {
+    return donacionesService.buscarCategoriaPorID(categoriaID);
+  }
+
+  public List<CategoriaDTO> listarCategorias() {
+    return donacionesService.listarCategorias();
+  }
+
+  public IdentificadorDTO agregarIdentificador(IdentificadorDTO dto) {
+    return donacionesService.agregarIdentificador(dto);
+  }
+
+  public IdentificadorDTO buscarIdentificadorPorID(String identificadorID) {
+    return donacionesService.buscarIdentificadorPorID(identificadorID);
+  }
+
+  public List<IdentificadorDTO> listarIdentificadores() {
+    return donacionesService.listarIdentificadores();
+  }
+
   public List<DonacionDTO> listarDonaciones() {
     return donacionesService.listarDonaciones();
   }
@@ -55,11 +90,11 @@ public class Fachada implements FachadaDonaciones {
 
   @Override
   public void setFachadaDonadoresYEntidades(FachadaDonadoresYEntidades fachadaDonadoresYEntidades) {
-    // Ya no se usa porque ahora se comunica por HTTP usando DonadoresClient.
+    // Ahora se usa DonadoresClient.
   }
 
   @Override
   public void setFachadaLogistica(FachadaLogistica fachadaLogistica) {
-    // Ya no se usa porque ahora se comunica por HTTP usando LogisticaClient.
+    // Ahora se usa LogisticaClient.
   }
 }

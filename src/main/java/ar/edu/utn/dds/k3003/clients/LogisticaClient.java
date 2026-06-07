@@ -1,11 +1,11 @@
 package ar.edu.utn.dds.k3003.clients;
 
-import ar.edu.utn.dds.k3003.dtos.GestionDonacionRequest;
+import ar.edu.utn.dds.k3003.catedra.dtos.GestionDonacionRequest;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
 @Component
-public class LogisticaClient {
+public class LogisticaClient{
 
     private final RestClient restClient;
 
