@@ -29,7 +29,7 @@ public class LogisticaClient{
         );
 
         restClient.post()
-                .uri("/logistica/donaciones")
+                .uri("/depositos/{id}/donacion", depositoID)
                 .body(request)
                 .retrieve()
                 .toBodilessEntity();
