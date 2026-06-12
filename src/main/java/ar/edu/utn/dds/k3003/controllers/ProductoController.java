@@ -29,7 +29,7 @@ public class ProductoController {
         return ResponseEntity.ok(producto);
     }
 
-    @GetMapping()
+    @GetMapping("/productos")
     public ResponseEntity<List<ProductoDTO>> listarProductos() {
         return ResponseEntity.ok(fachada.listarProductos());
     }

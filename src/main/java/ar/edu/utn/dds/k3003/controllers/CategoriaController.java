@@ -29,7 +29,7 @@ public class CategoriaController {
         return ResponseEntity.ok(categoria);
     }
 
-    @GetMapping()
+    @GetMapping("/categorias")
     public ResponseEntity<List<CategoriaDTO>> listarCategorias() {
         return ResponseEntity.ok(fachada.listarCategorias());
     }
