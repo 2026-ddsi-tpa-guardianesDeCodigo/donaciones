@@ -1,6 +1,7 @@
 package ar.edu.utn.dds.k3003.clients;
 
 import ar.edu.utn.dds.k3003.catedra.dtos.GestionDonacionRequest;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
@@ -9,9 +10,9 @@ public class LogisticaClient{
 
     private final RestClient restClient;
 
-    public LogisticaClient() {
+    public LogisticaClient(@Value("${logistica.client}") String baseUrl) {
         this.restClient = RestClient.builder()
-                .baseUrl("http://localhost:8084")
+                .baseUrl(baseUrl)
                 .build();
     }
 

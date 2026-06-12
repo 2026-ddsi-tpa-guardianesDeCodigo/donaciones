@@ -1,6 +1,7 @@
 package ar.edu.utn.dds.k3003.clients;
 
 import ar.edu.utn.dds.k3003.catedra.dtos.donadoresYEntidades.QuejaDTO;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
@@ -9,9 +10,9 @@ public class DonadoresClient {
 
     private final RestClient restClient;
 
-    public DonadoresClient() {
+    public DonadoresClient(@Value("${donadores.client}") String baseUrl) {
         this.restClient = RestClient.builder()
-                .baseUrl("http://localhost:8081")
+                .baseUrl(baseUrl)
                 .build();
     }
 
@@ -22,11 +23,14 @@ public class DonadoresClient {
                 .toBodilessEntity();
     }
 
+
     public Boolean puedeDonar(String donadorID) {
-        return restClient.get()
+        PuedeDonarResponse response = restClient.get()
                 .uri("/donadores/{id}/puede-donar", donadorID)
                 .retrieve()
-                .body(Boolean.class);
+                .body(PuedeDonarResponse.class);
+
+        return response != null && response.puedeDonar();
     }
 
     public void agregarQueja(QuejaDTO quejaDTO) {
@@ -35,5 +39,7 @@ public class DonadoresClient {
                 .body(quejaDTO)
                 .retrieve()
                 .toBodilessEntity();
+    }
+    public record PuedeDonarResponse(Boolean puedeDonar) {
     }
 }
