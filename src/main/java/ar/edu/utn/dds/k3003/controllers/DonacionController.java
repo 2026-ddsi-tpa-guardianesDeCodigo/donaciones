@@ -58,7 +58,7 @@ public class DonacionController {
         DonacionDTO donacion = fachada.registrarQuejaEnDonacion(donacionID, descripcion);
         return ResponseEntity.ok(donacion);
     }
-    @GetMapping("/all")
+    @GetMapping()
     public ResponseEntity<List<DonacionDTO>> listarDonaciones() {
         return ResponseEntity.ok(fachada.listarDonaciones());
     }

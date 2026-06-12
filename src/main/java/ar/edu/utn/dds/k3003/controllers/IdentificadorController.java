@@ -29,7 +29,7 @@ public class IdentificadorController {
         return ResponseEntity.ok(identificador);
     }
 
-    @GetMapping("/all")
+    @GetMapping()
     public ResponseEntity<List<IdentificadorDTO>> listarIdentificadores() {
         return ResponseEntity.ok(fachada.listarIdentificadores());
     }
