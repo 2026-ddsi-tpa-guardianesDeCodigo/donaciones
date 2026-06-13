@@ -6,8 +6,8 @@ import ar.edu.utn.dds.k3003.clients.DonadoresClient;
 import ar.edu.utn.dds.k3003.clients.LogisticaClient;
 import ar.edu.utn.dds.k3003.model.*;
 import ar.edu.utn.dds.k3003.repositories.*;
-import ar.edu.utn.dds.k3003.metrics.DonacionesMetrics;
 import org.springframework.stereotype.Service;
+import ar.edu.utn.dds.k3003.metrics.DonacionesMetrics;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -65,6 +65,10 @@ public class DonacionesService {
                 dto.cantidad()
         );
 
+        if (metrics != null) {
+            metrics.incrementarEnviosALogistica();
+        }
+
         buscarProductoInternoPorID(dto.productoID());
 
         Donacion donacion = new Donacion(
@@ -119,6 +123,18 @@ public class DonacionesService {
         donacion.setEstado(estado);
         donacionesRepository.save(donacion);
 
+        if (metrics != null) {
+            metrics.incrementarCambiosEstado();
+
+            if (estado == EstadoDonacionEnum.ACEPTADA) {
+                metrics.incrementarDonacionesAceptadas();
+            }
+
+            if (estado == EstadoDonacionEnum.CONQUEJA) {
+                metrics.incrementarDonacionesConQueja();
+            }
+        }
+
         return donacionMapper.toDonacionDTO(donacion);
     }
 
@@ -133,6 +149,11 @@ public class DonacionesService {
     }
 
     public DonacionDTO registrarQuejaEnDonacion(String donacionID, String descripcion) {
+
+        if (metrics != null) {
+            metrics.incrementarQuejasRegistradas();
+        }
+
         if (donacionID == null || donacionID.isBlank()) {
             throw new RuntimeException("Donacion invalida");
         }
@@ -162,6 +183,7 @@ public class DonacionesService {
                 .filter(d -> d.getDonadorID().trim().equals(donadorID.trim()))
                 .map(donacionMapper::toDonacionDTO)
                 .toList();
+
     }
 
     public ProductoDTO agregarProducto(ProductoDTO dto) {
@@ -201,6 +223,10 @@ public class DonacionesService {
     }
 
     public ProductoDTO buscarProductoPorID(String productoID) {
+        if (metrics != null) {
+            metrics.incrementarConsultasProductoPorId();
+        }
+
         Producto producto = productoRepository.findById(productoID)
                 .orElseThrow(() -> new RuntimeException("Producto no encontrado"));
 
