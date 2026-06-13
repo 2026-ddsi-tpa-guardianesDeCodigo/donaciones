@@ -49,9 +49,7 @@ public class DonacionesService {
             throw new RuntimeException("Donacion invalida");
         }
 
-        if (dto.id() != null && donacionesRepository.findById(dto.id()).isPresent()) {
-            throw new RuntimeException("La donación ya fue registrada");
-        }
+        String nuevoId = String.valueOf(donacionesRepository.findAll().size() + 1);
 
         donadoresClient.buscarDonadorPorID(dto.donadorID());
 
@@ -62,7 +60,7 @@ public class DonacionesService {
 
         logisticaClient.gestionarDonacion(
                 dto.depositoID(),
-                dto.id(),
+                nuevoId,
                 dto.productoID(),
                 dto.cantidad()
         );
@@ -70,7 +68,7 @@ public class DonacionesService {
         buscarProductoInternoPorID(dto.productoID());
 
         Donacion donacion = new Donacion(
-                dto.id(),
+                nuevoId,
                 dto.donadorID(),
                 dto.depositoID(),
                 dto.descripcion(),
