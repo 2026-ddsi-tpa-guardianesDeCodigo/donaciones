@@ -23,13 +23,13 @@ public class ProductoController {
         return ResponseEntity.ok(productoAgregado);
     }
 
-    @GetMapping
-    public ResponseEntity<ProductoDTO> buscarProductoPorID(@RequestParam String productoID) {
+    @GetMapping("/{productoID}")
+    public ResponseEntity<ProductoDTO> buscarProductoPorID(@PathVariable String productoID) {
         ProductoDTO producto = fachada.buscarProductoPorID(productoID);
         return ResponseEntity.ok(producto);
     }
 
-    @GetMapping("/productos")
+    @GetMapping
     public ResponseEntity<List<ProductoDTO>> listarProductos() {
         return ResponseEntity.ok(fachada.listarProductos());
     }

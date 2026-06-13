@@ -23,13 +23,13 @@ public class CategoriaController {
         return ResponseEntity.ok(categoriaAgregada);
     }
 
-    @GetMapping
-    public ResponseEntity<CategoriaDTO> buscarCategoriaPorID(@RequestParam String categoriaID) {
+    @GetMapping("/{categoriaID}")
+    public ResponseEntity<CategoriaDTO> buscarCategoriaPorID(@PathVariable String categoriaID) {
         CategoriaDTO categoria = fachada.buscarCategoriaPorID(categoriaID);
         return ResponseEntity.ok(categoria);
     }
 
-    @GetMapping("/categorias")
+    @GetMapping
     public ResponseEntity<List<CategoriaDTO>> listarCategorias() {
         return ResponseEntity.ok(fachada.listarCategorias());
     }

@@ -23,13 +23,13 @@ public class IdentificadorController {
         return ResponseEntity.ok(identificadorAgregado);
     }
 
-    @GetMapping
-    public ResponseEntity<IdentificadorDTO> buscarIdentificadorPorID(@RequestParam String identificadorID) {
+    @GetMapping("/{identificadorID}")
+    public ResponseEntity<IdentificadorDTO> buscarIdentificadorPorID(@PathVariable String identificadorID) {
         IdentificadorDTO identificador = fachada.buscarIdentificadorPorID(identificadorID);
         return ResponseEntity.ok(identificador);
     }
 
-    @GetMapping("/identificadores")
+    @GetMapping
     public ResponseEntity<List<IdentificadorDTO>> listarIdentificadores() {
         return ResponseEntity.ok(fachada.listarIdentificadores());
     }
