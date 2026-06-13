@@ -125,17 +125,13 @@ public class DonacionesService {
     }
 
     public List<DonacionDTO> buscarPorDonadorYFechaInicio(String donadorID, LocalDate fecha) {
-        List<DonacionDTO> resultado = donacionesRepository.findAll().stream()
-                .filter(d -> d.getDonadorID().equals(donadorID))
+        return donacionesRepository.findAll().stream()
+                .filter(d -> d.getDonadorID() != null)
+                .filter(d -> d.getDonadorID().trim().equals(donadorID.trim()))
+                .filter(d -> d.getFecha() != null)
                 .filter(d -> !d.getFecha().isBefore(fecha))
                 .map(donacionMapper::toDonacionDTO)
                 .toList();
-
-        if (resultado.isEmpty()) {
-            throw new RuntimeException("No se encontraron donaciones");
-        }
-
-        return resultado;
     }
 
     public DonacionDTO registrarQuejaEnDonacion(String donacionID, String descripcion) {
