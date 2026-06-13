@@ -191,9 +191,8 @@ public class DonacionesService {
             throw new RuntimeException("Producto invalido");
         }
 
-        if (dto.id() != null && productoRepository.findById(dto.id()).isPresent()) {
-            throw new RuntimeException("El producto ya existe");
-        }
+        String nuevoId = String.valueOf(productoRepository.findAll().size() + 1);
+
 
         Categoria categoria = categoriaRepository.findById(dto.categoriaID())
                 .orElseThrow(() -> new RuntimeException("Categoria no encontrada"));
@@ -206,7 +205,7 @@ public class DonacionesService {
         }
 
         Producto producto = new Producto(
-                dto.id(),
+                nuevoId,
                 dto.nombre(),
                 dto.descripcion(),
                 categoria,
@@ -245,16 +244,14 @@ public class DonacionesService {
     }
 
     public CategoriaDTO agregarCategoria(CategoriaDTO dto) {
+        String nuevoId = String.valueOf(categoriaRepository.findAll().size() + 1);
+
         if (dto == null) {
             throw new RuntimeException("Categoria invalida");
         }
 
-        if (dto.id() != null && categoriaRepository.findById(dto.id()).isPresent()) {
-            throw new RuntimeException("La categoria ya existe");
-        }
-
         Categoria categoria = new Categoria(
-                dto.id(),
+                nuevoId,
                 dto.nombre(),
                 dto.descripcion(),
                 null
@@ -302,6 +299,8 @@ public class DonacionesService {
     }
 
     public IdentificadorDTO agregarIdentificador(IdentificadorDTO dto) {
+        String nuevoId = String.valueOf(identificadorRepository.findAll().size() + 1);
+
         if (dto == null) {
             throw new RuntimeException("Identificador invalido");
         }
@@ -311,7 +310,7 @@ public class DonacionesService {
         }
 
         Identificador identificador = new Identificador(
-                dto.id(),
+                nuevoId,
                 dto.tipo() == TipoIdentificadorEnum.QR
                         ? TipoIdentificador.CODIGO_QR
                         : TipoIdentificador.CODIGO_BARRAS,

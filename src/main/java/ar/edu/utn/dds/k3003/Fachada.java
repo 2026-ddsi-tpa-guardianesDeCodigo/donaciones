@@ -5,7 +5,9 @@ import ar.edu.utn.dds.k3003.catedra.fachadas.FachadaDonaciones;
 import ar.edu.utn.dds.k3003.catedra.fachadas.FachadaDonadoresYEntidades;
 import ar.edu.utn.dds.k3003.catedra.fachadas.FachadaLogistica;
 import ar.edu.utn.dds.k3003.services.DonacionesService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import io.micrometer.core.instrument.MeterRegistry;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -14,6 +16,9 @@ import java.util.List;
 public class Fachada implements FachadaDonaciones {
 
   private final DonacionesService donacionesService;
+
+  @Autowired
+  private MeterRegistry meterRegistry;
 
   public Fachada(DonacionesService donacionesService) {
     this.donacionesService = donacionesService;
@@ -57,6 +62,7 @@ public class Fachada implements FachadaDonaciones {
   }
 
   public CategoriaDTO agregarCategoria(CategoriaDTO dto) {
+    meterRegistry.counter("donaciones.categorias.agregadas").increment();
     return donacionesService.agregarCategoria(dto);
   }
 
