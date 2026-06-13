@@ -158,6 +158,14 @@ public class DonacionesService {
         return cambiarEstadoDeDonacion(donacionID, EstadoDonacionEnum.CONQUEJA);
     }
 
+    public List<DonacionDTO> buscarPorDonador(String donadorID) {
+        return donacionesRepository.findAll().stream()
+                .filter(d -> d.getDonadorID() != null)
+                .filter(d -> d.getDonadorID().trim().equals(donadorID.trim()))
+                .map(donacionMapper::toDonacionDTO)
+                .toList();
+    }
+
     public ProductoDTO agregarProducto(ProductoDTO dto) {
         if (dto == null) {
             throw new RuntimeException("Producto invalido");

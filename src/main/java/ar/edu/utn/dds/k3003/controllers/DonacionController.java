@@ -35,13 +35,11 @@ public class DonacionController {
         return ResponseEntity.ok(donacionActualizada);
     }
 
-    @GetMapping("/buscar-por-donador")
-    public ResponseEntity<List<DonacionDTO>> buscarPorDonadorYFechaInicio(
-            @RequestParam String donadorID,
-            @RequestParam String fecha
+    @GetMapping("/buscarPorDonador/{donadorID}")
+    public ResponseEntity<List<DonacionDTO>> buscarPorDonador(
+            @PathVariable String donadorID
     ) {
-        LocalDate fechaInicio = LocalDate.parse(fecha);
-        List<DonacionDTO> donaciones = fachada.buscarPorDonadorYFechaInicio(donadorID, fechaInicio);
+        List<DonacionDTO> donaciones = fachada.buscarPorDonador(donadorID);
         return ResponseEntity.ok(donaciones);
     }
 

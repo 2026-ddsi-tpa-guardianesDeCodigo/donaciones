@@ -88,6 +88,10 @@ public class Fachada implements FachadaDonaciones {
     donacionesService.limpiarBase();
   }
 
+  public List<DonacionDTO> buscarPorDonador(String donadorID) {
+    return donacionesService.buscarPorDonador(donadorID);
+  }
+
   @Override
   public void setFachadaDonadoresYEntidades(FachadaDonadoresYEntidades fachadaDonadoresYEntidades) {
     // Ahora se usa DonadoresClient.
