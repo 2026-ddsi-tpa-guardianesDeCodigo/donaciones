@@ -4,10 +4,11 @@ import ar.edu.utn.dds.k3003.catedra.dtos.donaciones.*;
 import ar.edu.utn.dds.k3003.catedra.dtos.donadoresYEntidades.QuejaDTO;
 import ar.edu.utn.dds.k3003.clients.DonadoresClient;
 import ar.edu.utn.dds.k3003.clients.LogisticaClient;
+import ar.edu.utn.dds.k3003.exceptions.*;
+import ar.edu.utn.dds.k3003.metrics.DonacionesMetrics;
 import ar.edu.utn.dds.k3003.model.*;
 import ar.edu.utn.dds.k3003.repositories.*;
 import org.springframework.stereotype.Service;
-import ar.edu.utn.dds.k3003.metrics.DonacionesMetrics;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -46,7 +47,23 @@ public class DonacionesService {
 
     public DonacionDTO registrarDonacion(DonacionDTO dto) {
         if (dto == null) {
-            throw new RuntimeException("Donacion invalida");
+            throw new DonacionInvalidaException("Donacion invalida");
+        }
+
+        if (dto.donadorID() == null || dto.donadorID().isBlank()) {
+            throw new DonacionInvalidaException("Donador invalido");
+        }
+
+        if (dto.depositoID() == null || dto.depositoID().isBlank()) {
+            throw new DonacionInvalidaException("Deposito invalido");
+        }
+
+        if (dto.productoID() == null || dto.productoID().isBlank()) {
+            throw new DonacionInvalidaException("Producto invalido");
+        }
+
+        if (dto.cantidad() <= 0) {
+            throw new DonacionInvalidaException("La cantidad debe ser mayor a cero");
         }
 
         String nuevoId = String.valueOf(donacionesRepository.findAll().size() + 1);
@@ -55,8 +72,10 @@ public class DonacionesService {
 
         Boolean puedeDonar = donadoresClient.puedeDonar(dto.donadorID());
         if (puedeDonar == null || !puedeDonar) {
-            throw new RuntimeException("No puede donar");
+            throw new NoPuedeDonarException("No puede donar");
         }
+
+        buscarProductoInternoPorID(dto.productoID());
 
         logisticaClient.gestionarDonacion(
                 dto.depositoID(),
@@ -68,8 +87,6 @@ public class DonacionesService {
         if (metrics != null) {
             metrics.incrementarEnviosALogistica();
         }
-
-        buscarProductoInternoPorID(dto.productoID());
 
         Donacion donacion = new Donacion(
                 nuevoId,
@@ -92,32 +109,40 @@ public class DonacionesService {
     }
 
     public DonacionDTO buscarDonacionPorID(String id) {
+        if (id == null || id.isBlank()) {
+            throw new DonacionInvalidaException("Donacion invalida");
+        }
+
         Donacion donacion = donacionesRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Donacion no encontrada"));
+                .orElseThrow(() -> new DonacionNoEncontradaException("Donacion no encontrada"));
 
         return donacionMapper.toDonacionDTO(donacion);
     }
 
     public DonacionDTO cambiarEstadoDeDonacion(String donacionID, EstadoDonacionEnum estado) {
         if (donacionID == null || donacionID.isBlank()) {
-            throw new RuntimeException("Donacion invalida");
+            throw new DonacionInvalidaException("Donacion invalida");
         }
 
         if (estado == null) {
-            throw new RuntimeException("Estado invalido");
+            throw new DonacionInvalidaException("Estado invalido");
         }
 
         Donacion donacion = donacionesRepository.findById(donacionID)
-                .orElseThrow(() -> new RuntimeException("Donacion no encontrada"));
+                .orElseThrow(() -> new DonacionNoEncontradaException("Donacion no encontrada"));
 
         EstadoDonacionEnum estadoActual = donacion.getEstado();
 
         if (estado == EstadoDonacionEnum.ACEPTADA && estadoActual != EstadoDonacionEnum.INGRESADA) {
-            throw new RuntimeException("Transicion invalida: para aceptar, la donacion debe estar INGRESADA");
+            throw new TransicionEstadoInvalidaException(
+                    "Transicion invalida: para aceptar, la donacion debe estar INGRESADA"
+            );
         }
 
         if (estado == EstadoDonacionEnum.CONQUEJA && estadoActual != EstadoDonacionEnum.ACEPTADA) {
-            throw new RuntimeException("Transicion invalida: para registrar queja, la donacion debe estar ACEPTADA");
+            throw new TransicionEstadoInvalidaException(
+                    "Transicion invalida: para registrar queja, la donacion debe estar ACEPTADA"
+            );
         }
 
         donacion.setEstado(estado);
@@ -139,6 +164,14 @@ public class DonacionesService {
     }
 
     public List<DonacionDTO> buscarPorDonadorYFechaInicio(String donadorID, LocalDate fecha) {
+        if (donadorID == null || donadorID.isBlank()) {
+            throw new DonacionInvalidaException("Donador invalido");
+        }
+
+        if (fecha == null) {
+            throw new DonacionInvalidaException("Fecha invalida");
+        }
+
         return donacionesRepository.findAll().stream()
                 .filter(d -> d.getDonadorID() != null)
                 .filter(d -> d.getDonadorID().trim().equals(donadorID.trim()))
@@ -149,17 +182,16 @@ public class DonacionesService {
     }
 
     public DonacionDTO registrarQuejaEnDonacion(String donacionID, String descripcion) {
-
-        if (metrics != null) {
-            metrics.incrementarQuejasRegistradas();
+        if (donacionID == null || donacionID.isBlank()) {
+            throw new DonacionInvalidaException("Donacion invalida");
         }
 
-        if (donacionID == null || donacionID.isBlank()) {
-            throw new RuntimeException("Donacion invalida");
+        if (descripcion == null || descripcion.isBlank()) {
+            throw new DonacionInvalidaException("Descripcion invalida");
         }
 
         Donacion donacion = donacionesRepository.findById(donacionID)
-                .orElseThrow(() -> new RuntimeException("Donacion no encontrada"));
+                .orElseThrow(() -> new DonacionNoEncontradaException("Donacion no encontrada"));
 
         QuejaDTO queja = new QuejaDTO(
                 null,
@@ -174,34 +206,56 @@ public class DonacionesService {
         donacion.setDescripcion(descripcion);
         donacionesRepository.save(donacion);
 
+        if (metrics != null) {
+            metrics.incrementarQuejasRegistradas();
+        }
+
         return cambiarEstadoDeDonacion(donacionID, EstadoDonacionEnum.CONQUEJA);
     }
 
     public List<DonacionDTO> buscarPorDonador(String donadorID) {
+        if (donadorID == null || donadorID.isBlank()) {
+            throw new DonacionInvalidaException("Donador invalido");
+        }
+
         return donacionesRepository.findAll().stream()
                 .filter(d -> d.getDonadorID() != null)
                 .filter(d -> d.getDonadorID().trim().equals(donadorID.trim()))
                 .map(donacionMapper::toDonacionDTO)
                 .toList();
-
     }
 
     public ProductoDTO agregarProducto(ProductoDTO dto) {
         if (dto == null) {
-            throw new RuntimeException("Producto invalido");
+            throw new ProductoInvalidoException("Producto invalido");
+        }
+
+        if (dto.nombre() == null || dto.nombre().isBlank()) {
+            throw new ProductoInvalidoException("Nombre de producto invalido");
+        }
+
+        if (dto.descripcion() == null || dto.descripcion().isBlank()) {
+            throw new ProductoInvalidoException("Descripcion de producto invalida");
+        }
+
+        if (dto.categoriaID() == null || dto.categoriaID().isBlank()) {
+            throw new ProductoInvalidoException("Categoria invalida");
+        }
+
+        if (dto.identificadorID() == null || dto.identificadorID().isBlank()) {
+            throw new ProductoInvalidoException("Identificador invalido");
         }
 
         String nuevoId = String.valueOf(productoRepository.findAll().size() + 1);
 
-
         Categoria categoria = categoriaRepository.findById(dto.categoriaID())
-                .orElseThrow(() -> new RuntimeException("Categoria no encontrada"));
+                .orElseThrow(() -> new CategoriaNoEncontradaException("Categoria no encontrada"));
 
         Identificador identificador = identificadorRepository.findById(dto.identificadorID())
-                .orElseThrow(() -> new RuntimeException("Identificador no encontrado"));
+                .orElseThrow(() -> new IdentificadorNoEncontradoException("Identificador no encontrado"));
 
         if (!esValidoSegunIdentificador(dto.nombre(), dto.descripcion(), identificador)) {
-            throw new RuntimeException("Producto invalido segun identificador");
+            throw new ProductoInvalidoException("Producto invalido segun identificador");
         }
 
         Producto producto = new Producto(
@@ -222,19 +276,27 @@ public class DonacionesService {
     }
 
     public ProductoDTO buscarProductoPorID(String productoID) {
+        if (productoID == null || productoID.isBlank()) {
+            throw new ProductoInvalidoException("Producto invalido");
+        }
+
         if (metrics != null) {
             metrics.incrementarConsultasProductoPorId();
         }
 
         Producto producto = productoRepository.findById(productoID)
-                .orElseThrow(() -> new RuntimeException("Producto no encontrado"));
+                .orElseThrow(() -> new ProductoNoEncontradoException("Producto no encontrado"));
 
         return productoDataMapper.toDTO(producto);
     }
 
     private Producto buscarProductoInternoPorID(String productoID) {
+        if (productoID == null || productoID.isBlank()) {
+            throw new ProductoInvalidoException("Producto invalido");
+        }
+
         return productoRepository.findById(productoID)
-                .orElseThrow(() -> new RuntimeException("Producto no encontrado"));
+                .orElseThrow(() -> new ProductoNoEncontradoException("Producto no encontrado"));
     }
 
     public List<ProductoDTO> listarProductos() {
@@ -244,11 +306,19 @@ public class DonacionesService {
     }
 
     public CategoriaDTO agregarCategoria(CategoriaDTO dto) {
-        String nuevoId = String.valueOf(categoriaRepository.findAll().size() + 1);
-
         if (dto == null) {
-            throw new RuntimeException("Categoria invalida");
+            throw new CategoriaInvalidaException("Categoria invalida");
         }
+
+        if (dto.nombre() == null || dto.nombre().isBlank()) {
+            throw new CategoriaInvalidaException("Nombre de categoria invalido");
+        }
+
+        if (dto.descripcion() == null || dto.descripcion().isBlank()) {
+            throw new CategoriaInvalidaException("Descripcion de categoria invalida");
+        }
+
+        String nuevoId = String.valueOf(categoriaRepository.findAll().size() + 1);
 
         Categoria categoria = new Categoria(
                 nuevoId,
@@ -272,8 +342,12 @@ public class DonacionesService {
     }
 
     public CategoriaDTO buscarCategoriaPorID(String categoriaID) {
+        if (categoriaID == null || categoriaID.isBlank()) {
+            throw new CategoriaInvalidaException("Categoria invalida");
+        }
+
         Categoria categoria = categoriaRepository.findById(categoriaID)
-                .orElseThrow(() -> new RuntimeException("Categoria no encontrada"));
+                .orElseThrow(() -> new CategoriaNoEncontradaException("Categoria no encontrada"));
 
         String subcategoriaID = categoria.getSubcategoria() != null
                 ? categoria.getSubcategoria().getId()
@@ -299,15 +373,23 @@ public class DonacionesService {
     }
 
     public IdentificadorDTO agregarIdentificador(IdentificadorDTO dto) {
-        String nuevoId = String.valueOf(identificadorRepository.findAll().size() + 1);
-
         if (dto == null) {
-            throw new RuntimeException("Identificador invalido");
+            throw new IdentificadorInvalidoException("Identificador invalido");
+        }
+
+        if (dto.tipo() == null) {
+            throw new IdentificadorInvalidoException("Tipo de identificador invalido");
+        }
+
+        if (dto.descripcion() == null || dto.descripcion().isBlank()) {
+            throw new IdentificadorInvalidoException("Descripcion de identificador invalida");
         }
 
         if (dto.id() != null && identificadorRepository.findById(dto.id()).isPresent()) {
-            throw new RuntimeException("El identificador ya existe");
+            throw new IdentificadorInvalidoException("El identificador ya existe");
         }
+
+        String nuevoId = String.valueOf(identificadorRepository.findAll().size() + 1);
 
         Identificador identificador = new Identificador(
                 nuevoId,
@@ -327,8 +409,12 @@ public class DonacionesService {
     }
 
     public IdentificadorDTO buscarIdentificadorPorID(String identificadorID) {
+        if (identificadorID == null || identificadorID.isBlank()) {
+            throw new IdentificadorInvalidoException("Identificador invalido");
+        }
+
         Identificador identificador = identificadorRepository.findById(identificadorID)
-                .orElseThrow(() -> new RuntimeException("Identificador no encontrado"));
+                .orElseThrow(() -> new IdentificadorNoEncontradoException("Identificador no encontrado"));
 
         return new IdentificadorDTO(
                 identificador.getId(),
@@ -384,6 +470,7 @@ public class DonacionesService {
         if (texto == null || texto.trim().isEmpty()) {
             return 0;
         }
+
         return texto.trim().split("\\s+").length;
     }
 
