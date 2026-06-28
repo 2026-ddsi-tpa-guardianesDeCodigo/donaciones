@@ -7,7 +7,8 @@ import jakarta.persistence.*;
 public class Categoria {
 
     @Id
-    private String id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     private String nombre;
 
@@ -20,7 +21,7 @@ public class Categoria {
     public Categoria() {
     }
 
-    public Categoria(String id,
+    public Categoria(Long id,
                      String nombre,
                      String descripcion,
                      Subcategoria subcategoria) {
@@ -30,7 +31,7 @@ public class Categoria {
         this.subcategoria = subcategoria;
     }
 
-    public String getId() {
+    public Long getId() {
         return id;
     }
 

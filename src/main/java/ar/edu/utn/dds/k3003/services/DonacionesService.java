@@ -318,25 +318,23 @@ public class DonacionesService {
             throw new CategoriaInvalidaException("Descripcion de categoria invalida");
         }
 
-        String nuevoId = String.valueOf(categoriaRepository.findAll().size() + 1);
-
         Categoria categoria = new Categoria(
-                nuevoId,
+                null,
                 dto.nombre(),
                 dto.descripcion(),
                 null
         );
 
-        categoriaRepository.save(categoria);
+        Categoria guardada = categoriaRepository.save(categoria);
 
         if (metrics != null) {
             metrics.incrementarCategoriasRegistradas();
         }
 
         return new CategoriaDTO(
-                categoria.getId(),
-                categoria.getNombre(),
-                categoria.getDescripcion(),
+                guardada.getId(),
+                guardada.getNombre(),
+                guardada.getDescripcion(),
                 null
         );
     }

@@ -7,7 +7,8 @@ import jakarta.persistence.*;
 public class Identificador {
 
     @Id
-    private String id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     @Enumerated(EnumType.STRING)
     private TipoIdentificador tipo;
@@ -17,7 +18,7 @@ public class Identificador {
     public Identificador() {
     }
 
-    public Identificador(String id,
+    public Identificador(Long id,
                          TipoIdentificador tipo,
                          String descripcion) {
         this.id = id;
@@ -25,7 +26,7 @@ public class Identificador {
         this.descripcion = descripcion;
     }
 
-    public String getId() {
+    public Long getId() {
         return id;
     }
 

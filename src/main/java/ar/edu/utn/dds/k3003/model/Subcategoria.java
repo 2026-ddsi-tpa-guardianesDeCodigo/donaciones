@@ -7,19 +7,20 @@ import jakarta.persistence.*;
 public class Subcategoria {
 
     @Id
-    private String id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     private String nombre;
 
     public Subcategoria() {
     }
 
-    public Subcategoria(String id, String nombre,Categoria categoria) {
+    public Subcategoria(Long id, String nombre, Categoria categoria) {
         this.id = id;
         this.nombre = nombre;
     }
 
-    public String getId() {
+    public Long getId() {
         return id;
     }
 

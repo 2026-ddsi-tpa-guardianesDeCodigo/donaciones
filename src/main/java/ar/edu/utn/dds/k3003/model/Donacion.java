@@ -9,7 +9,8 @@ import java.time.LocalDate;
 public class Donacion {
 
     @Id
-    private String id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     private String donadorID;
     private String depositoID;
@@ -28,7 +29,7 @@ public class Donacion {
     public Donacion() {
     }
 
-    public Donacion(String id, String donadorID, String depositoID,
+    public Donacion(Long id, String donadorID, String depositoID,
                     String descripcion, String productoID,
                     Integer cantidad, EstadoDonacionEnum estado,
                     LocalDate fecha) {
@@ -42,7 +43,7 @@ public class Donacion {
         this.fecha = fecha;
     }
 
-    public String getId() {
+    public Long getId() {
         return id;
     }
 

@@ -7,7 +7,8 @@ import jakarta.persistence.*;
 public class Producto {
 
     @Id
-    private String id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     private String nombre;
     private String descripcion;
@@ -23,7 +24,7 @@ public class Producto {
     public Producto() {
     }
 
-    public Producto(String id,
+    public Producto(Long id,
                     String nombre,
                     String descripcion,
                     Categoria categoria,
@@ -35,7 +36,7 @@ public class Producto {
         this.identificador = identificador;
     }
 
-    public String getId() {
+    public Long getId() {
         return id;
     }
 
