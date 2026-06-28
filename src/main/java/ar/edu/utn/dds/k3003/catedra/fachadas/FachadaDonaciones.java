@@ -12,23 +12,23 @@ public interface FachadaDonaciones {
 
   DonacionDTO registrarDonacion(DonacionDTO donacionDTO);
 
-  DonacionDTO buscarDonacionPorID(String donacionID) throws NoSuchElementException;
+  DonacionDTO buscarDonacionPorID(Long donacionID) throws NoSuchElementException;
 
-  DonacionDTO cambiarEstadoDeDonacion(String donacionID, EstadoDonacionEnum estado)
+  DonacionDTO cambiarEstadoDeDonacion(Long donacionID, EstadoDonacionEnum estado)
       throws NoSuchElementException;
 
-  List<DonacionDTO> buscarPorDonadorYFechaInicio(String donadorID, LocalDate fecha)
+  List<DonacionDTO> buscarPorDonadorYFechaInicio(Long donadorID, LocalDate fecha)
       throws NoSuchElementException;
 
-  DonacionDTO registrarQuejaEnDonacion(String donacionID, String descripcion);
+  DonacionDTO registrarQuejaEnDonacion(Long donacionID, String descripcion);
 
   ProductoDTO agregarProducto(ProductoDTO productoDTO);
 
-  ProductoDTO buscarProductoPorID(String productoID) throws NoSuchElementException;
+  ProductoDTO buscarProductoPorID(Long productoID) throws NoSuchElementException;
 
   IdentificadorDTO agregarIdentificador(IdentificadorDTO identificadorDTO);
 
-  IdentificadorDTO buscarIdentificadorPorID(String identificadorID) throws NoSuchElementException;
+  IdentificadorDTO buscarIdentificadorPorID(Long identificadorID) throws NoSuchElementException;
 
   void setFachadaDonadoresYEntidades(FachadaDonadoresYEntidades fachadaDonadoresYEntidades);
 

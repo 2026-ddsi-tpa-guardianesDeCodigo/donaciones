@@ -25,7 +25,7 @@ public class ProductoController {
 
     @GetMapping("/{productoID}")
     public ResponseEntity<ProductoDTO> buscarProductoPorID(@PathVariable String productoID) {
-        ProductoDTO producto = fachada.buscarProductoPorID(productoID);
+        ProductoDTO producto = fachada.buscarProductoPorID(Long.valueOf(productoID));
         return ResponseEntity.ok(producto);
     }
 

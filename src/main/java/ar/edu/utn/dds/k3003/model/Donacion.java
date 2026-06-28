@@ -17,7 +17,7 @@ public class Donacion {
     private String descripcion;
 
     @Column(name = "producto_id")
-    private String productoID;
+    private Long productoID;
 
     private Integer cantidad;
 
@@ -30,7 +30,7 @@ public class Donacion {
     }
 
     public Donacion(Long id, String donadorID, String depositoID,
-                    String descripcion, String productoID,
+                    String descripcion, Long productoID,
                     Integer cantidad, EstadoDonacionEnum estado,
                     LocalDate fecha) {
         this.id = id;

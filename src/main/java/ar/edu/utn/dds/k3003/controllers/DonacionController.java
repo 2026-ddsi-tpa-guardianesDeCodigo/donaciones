@@ -28,7 +28,7 @@ public class DonacionController {
 
     @PatchMapping("/estado")
     public ResponseEntity<DonacionDTO> cambiarEstadoDeDonacion(
-            @RequestParam String donacionID,
+            @RequestParam Long donacionID,
             @RequestBody EstadoDonacionEnum estado
     ) {
         DonacionDTO donacionActualizada = fachada.cambiarEstadoDeDonacion(donacionID, estado);
@@ -37,7 +37,7 @@ public class DonacionController {
 
     @GetMapping("/buscarPorDonador/{donadorID}")
     public ResponseEntity<List<DonacionDTO>> buscarPorDonador(
-            @PathVariable String donadorID
+            @PathVariable Long donadorID
     ) {
         List<DonacionDTO> donaciones = fachada.buscarPorDonador(donadorID);
         return ResponseEntity.ok(donaciones);
@@ -45,14 +45,14 @@ public class DonacionController {
 
     @PatchMapping("/queja")
     public ResponseEntity<DonacionDTO> registrarQuejaEnDonacion(
-            @RequestParam String donacionID,
+            @RequestParam Long donacionID,
             @RequestParam String descripcion
     ) {
         DonacionDTO donacion = fachada.registrarQuejaEnDonacion(donacionID, descripcion);
         return ResponseEntity.ok(donacion);
     }
     @GetMapping("/{donacionID}")
-    public ResponseEntity<DonacionDTO> buscarDonacionPorID(@PathVariable String donacionID) {
+    public ResponseEntity<DonacionDTO> buscarDonacionPorID(@PathVariable Long donacionID) {
         DonacionDTO donacion = fachada.buscarDonacionPorID(donacionID);
         return ResponseEntity.ok(donacion);
     }

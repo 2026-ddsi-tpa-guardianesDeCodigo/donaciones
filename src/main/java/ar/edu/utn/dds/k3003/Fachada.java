@@ -30,22 +30,22 @@ public class Fachada implements FachadaDonaciones {
   }
 
   @Override
-  public DonacionDTO buscarDonacionPorID(String id) {
-    return donacionesService.buscarDonacionPorID(id);
+  public DonacionDTO buscarDonacionPorID(Long id) {
+    return donacionesService.buscarDonacionPorID(Long.valueOf(id));
   }
 
   @Override
-  public DonacionDTO cambiarEstadoDeDonacion(String donacionID, EstadoDonacionEnum estado) {
+  public DonacionDTO cambiarEstadoDeDonacion(Long donacionID, EstadoDonacionEnum estado) {
     return donacionesService.cambiarEstadoDeDonacion(donacionID, estado);
   }
 
   @Override
-  public List<DonacionDTO> buscarPorDonadorYFechaInicio(String donadorID, LocalDate fecha) {
-    return donacionesService.buscarPorDonadorYFechaInicio(donadorID, fecha);
+  public List<DonacionDTO> buscarPorDonadorYFechaInicio(Long donadorID, LocalDate fecha) {
+    return donacionesService.buscarPorDonadorYFechaInicio(String.valueOf(donadorID), fecha);
   }
 
   @Override
-  public DonacionDTO registrarQuejaEnDonacion(String donacionID, String descripcion) {
+  public DonacionDTO registrarQuejaEnDonacion(Long donacionID, String descripcion) {
     return donacionesService.registrarQuejaEnDonacion(donacionID, descripcion);
   }
 
@@ -53,7 +53,7 @@ public class Fachada implements FachadaDonaciones {
     return donacionesService.agregarProducto(dto);
   }
 
-  public ProductoDTO buscarProductoPorID(String productoID) {
+  public ProductoDTO buscarProductoPorID(Long productoID) {
     return donacionesService.buscarProductoPorID(productoID);
   }
 
@@ -66,7 +66,7 @@ public class Fachada implements FachadaDonaciones {
     return donacionesService.agregarCategoria(dto);
   }
 
-  public CategoriaDTO buscarCategoriaPorID(String categoriaID) {
+  public CategoriaDTO buscarCategoriaPorID(Long categoriaID) {
     return donacionesService.buscarCategoriaPorID(categoriaID);
   }
 
@@ -78,7 +78,7 @@ public class Fachada implements FachadaDonaciones {
     return donacionesService.agregarIdentificador(dto);
   }
 
-  public IdentificadorDTO buscarIdentificadorPorID(String identificadorID) {
+  public IdentificadorDTO buscarIdentificadorPorID(Long identificadorID) {
     return donacionesService.buscarIdentificadorPorID(Long.valueOf(identificadorID));
   }
 
@@ -94,7 +94,7 @@ public class Fachada implements FachadaDonaciones {
     donacionesService.limpiarBase();
   }
 
-  public List<DonacionDTO> buscarPorDonador(String donadorID) {
+  public List<DonacionDTO> buscarPorDonador(Long donadorID) {
     return donacionesService.buscarPorDonador(donadorID);
   }
 

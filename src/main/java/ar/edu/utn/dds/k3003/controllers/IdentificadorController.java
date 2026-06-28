@@ -24,7 +24,7 @@ public class IdentificadorController {
     }
 
     @GetMapping("/{identificadorID}")
-    public ResponseEntity<IdentificadorDTO> buscarIdentificadorPorID(@PathVariable String identificadorID) {
+    public ResponseEntity<IdentificadorDTO> buscarIdentificadorPorID(@PathVariable Long identificadorID) {
         IdentificadorDTO identificador = fachada.buscarIdentificadorPorID(identificadorID);
         return ResponseEntity.ok(identificador);
     }

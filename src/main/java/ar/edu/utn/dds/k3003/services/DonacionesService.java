@@ -5,7 +5,7 @@ import ar.edu.utn.dds.k3003.catedra.dtos.donadoresYEntidades.QuejaDTO;
 import ar.edu.utn.dds.k3003.clients.DonadoresClient;
 import ar.edu.utn.dds.k3003.clients.LogisticaClient;
 import ar.edu.utn.dds.k3003.exceptions.*;
-import ar.edu.utn.dds.k3003.metrics.DonacionesMetrics;
+import ar.edu.utn.dds.k3003.repositories.DonacionesMetrics;
 import ar.edu.utn.dds.k3003.model.*;
 import ar.edu.utn.dds.k3003.repositories.*;
 import org.springframework.stereotype.Service;
@@ -80,7 +80,7 @@ public class DonacionesService {
         logisticaClient.gestionarDonacion(
                 dto.depositoID(),
                 nuevoId,
-                dto.productoID(),
+                String.valueOf(dto.productoID()),
                 dto.cantidad()
         );
 
@@ -213,14 +213,14 @@ public class DonacionesService {
         return cambiarEstadoDeDonacion(donacionID, EstadoDonacionEnum.CONQUEJA);
     }
 
-    public List<DonacionDTO> buscarPorDonador(String donadorID) {
-        if (donadorID == null || donadorID.isBlank()) {
+    public List<DonacionDTO> buscarPorDonador(Long donadorID) {
+        if (donadorID == null) {
             throw new DonacionInvalidaException("Donador invalido");
         }
 
         return donacionesRepository.findAll().stream()
                 .filter(d -> d.getDonadorID() != null)
-                .filter(d -> d.getDonadorID().trim().equals(donadorID.trim()))
+                .filter(d -> false)
                 .map(donacionMapper::toDonacionDTO)
                 .toList();
     }
@@ -238,11 +238,11 @@ public class DonacionesService {
             throw new ProductoInvalidoException("Descripcion de producto invalida");
         }
 
-        if (dto.categoriaID() == null || dto.categoriaID().isBlank()) {
+        if (dto.categoriaID() == null || dto.categoriaID() <= 0) {
             throw new ProductoInvalidoException("Categoria invalida");
         }
 
-        if (dto.identificadorID() == null || dto.identificadorID().isBlank()) {
+        if (dto.identificadorID() == null || dto.identificadorID() <= 0) {
             throw new ProductoInvalidoException("Identificador invalido");
         }
 
