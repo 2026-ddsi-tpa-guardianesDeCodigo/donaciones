@@ -59,7 +59,7 @@ public class Donacion {
         return descripcion;
     }
 
-    public String getProductoID() {
+    public Long getProductoID() {
         return productoID;
     }
 

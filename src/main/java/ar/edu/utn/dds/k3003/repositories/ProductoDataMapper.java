@@ -9,7 +9,7 @@ public class ProductoDataMapper {
 
     public Producto toProducto(ProductoDTO dto,
                                Categoria categoria,
-                               String subcategoria,
+                               Long subcategoria,
                                Identificador identificador) {
         if (dto == null) {
             return null;

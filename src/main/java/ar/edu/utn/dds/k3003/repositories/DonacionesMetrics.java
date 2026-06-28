@@ -1,4 +1,4 @@
-package ar.edu.utn.dds.k3003.metrics;
+package ar.edu.utn.dds.k3003.repositories;
 
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;

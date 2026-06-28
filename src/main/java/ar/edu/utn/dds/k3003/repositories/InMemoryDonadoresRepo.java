@@ -22,12 +22,22 @@ public class InMemoryDonadoresRepo implements DonadoresRepository {
   }
 
   @Override
+  public Optional<Donador> findById(Long id) {
+    return Optional.empty();
+  }
+
+  @Override
   public Donador save(Donador donador) {
     Donador donadorConID = donador;
     donadorConID.setId(String.valueOf(idSecuencial.getAndIncrement()));
 
     this.donadores.add(donadorConID);
     return this.findById(donadorConID.getId()).get();
+  }
+
+  @Override
+  public Donador deleteById(Long id) {
+    return null;
   }
 
   @Override

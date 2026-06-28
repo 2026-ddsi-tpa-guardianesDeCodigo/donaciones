@@ -58,7 +58,7 @@ public class DonacionesService {
             throw new DonacionInvalidaException("Deposito invalido");
         }
 
-        if (dto.productoID() == null || dto.productoID().isBlank()) {
+        if (dto.productoID() == null || dto.productoID() <= 0) {
             throw new DonacionInvalidaException("Producto invalido");
         }
 
@@ -108,8 +108,8 @@ public class DonacionesService {
         return donacionMapper.toDonacionDTO(donacion);
     }
 
-    public DonacionDTO buscarDonacionPorID(String id) {
-        if (id == null || id.isBlank()) {
+    public DonacionDTO buscarDonacionPorID(Long id) {
+        if (id == null ) {
             throw new DonacionInvalidaException("Donacion invalida");
         }
 
@@ -119,8 +119,8 @@ public class DonacionesService {
         return donacionMapper.toDonacionDTO(donacion);
     }
 
-    public DonacionDTO cambiarEstadoDeDonacion(String donacionID, EstadoDonacionEnum estado) {
-        if (donacionID == null || donacionID.isBlank()) {
+    public DonacionDTO cambiarEstadoDeDonacion(Long donacionID, EstadoDonacionEnum estado) {
+        if (donacionID == null ) {
             throw new DonacionInvalidaException("Donacion invalida");
         }
 
@@ -181,8 +181,8 @@ public class DonacionesService {
                 .toList();
     }
 
-    public DonacionDTO registrarQuejaEnDonacion(String donacionID, String descripcion) {
-        if (donacionID == null || donacionID.isBlank()) {
+    public DonacionDTO registrarQuejaEnDonacion(Long donacionID, String descripcion) {
+        if (donacionID == null ) {
             throw new DonacionInvalidaException("Donacion invalida");
         }
 
@@ -275,8 +275,8 @@ public class DonacionesService {
         return productoDataMapper.toDTO(producto);
     }
 
-    public ProductoDTO buscarProductoPorID(String productoID) {
-        if (productoID == null || productoID.isBlank()) {
+    public ProductoDTO buscarProductoPorID(Long productoID) {
+        if (productoID == null ) {
             throw new ProductoInvalidoException("Producto invalido");
         }
 
@@ -290,12 +290,12 @@ public class DonacionesService {
         return productoDataMapper.toDTO(producto);
     }
 
-    private Producto buscarProductoInternoPorID(String productoID) {
-        if (productoID == null || productoID.isBlank()) {
+    private Producto buscarProductoInternoPorID(Long productoID) {
+        if (productoID == null ) {
             throw new ProductoInvalidoException("Producto invalido");
         }
 
-        return productoRepository.findById(productoID)
+        return productoRepository.findById(Long.valueOf(productoID))
                 .orElseThrow(() -> new ProductoNoEncontradoException("Producto no encontrado"));
     }
 
@@ -339,8 +339,8 @@ public class DonacionesService {
         );
     }
 
-    public CategoriaDTO buscarCategoriaPorID(String categoriaID) {
-        if (categoriaID == null || categoriaID.isBlank()) {
+    public CategoriaDTO buscarCategoriaPorID(Long categoriaID) {
+        if (categoriaID == null ) {
             throw new CategoriaInvalidaException("Categoria invalida");
         }
 
@@ -407,7 +407,7 @@ public class DonacionesService {
             throw new IdentificadorInvalidoException("Identificador invalido");
         }
 
-        Identificador identificador = identificadorRepository.findById(String.valueOf(identificadorID))
+        Identificador identificador = identificadorRepository.findById(identificadorID)
                 .orElseThrow(() -> new IdentificadorNoEncontradoException("Identificador no encontrado"));
 
         return new IdentificadorDTO(

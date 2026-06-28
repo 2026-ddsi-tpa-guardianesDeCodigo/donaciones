@@ -6,7 +6,11 @@ import java.util.Optional;
 public interface DonadoresRepository {
   Optional<Donador> findById(String id);
 
+  Optional<Donador> findById(Long id);
+
   Donador save(Donador donador);
+
+  Donador deleteById(Long id);
 
   Donador deleteById(String id);
 }
