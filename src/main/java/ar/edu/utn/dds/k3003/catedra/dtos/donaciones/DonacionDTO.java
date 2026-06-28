@@ -5,6 +5,6 @@ public record DonacionDTO(
         String donadorID,
         String depositoID,
         String descripcion,
-        String productoID,
+        Long productoID,
         Integer cantidad,
         EstadoDonacionEnum estado) {}
