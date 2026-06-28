@@ -79,7 +79,7 @@ public class Fachada implements FachadaDonaciones {
   }
 
   public IdentificadorDTO buscarIdentificadorPorID(String identificadorID) {
-    return donacionesService.buscarIdentificadorPorID(identificadorID);
+    return donacionesService.buscarIdentificadorPorID(Long.valueOf(identificadorID));
   }
 
   public List<IdentificadorDTO> listarIdentificadores() {

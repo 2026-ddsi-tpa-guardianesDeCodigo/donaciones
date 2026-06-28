@@ -89,7 +89,7 @@ public class DonacionesService {
         }
 
         Donacion donacion = new Donacion(
-                nuevoId,
+                null,
                 dto.donadorID(),
                 dto.depositoID(),
                 dto.descripcion(),
@@ -259,7 +259,7 @@ public class DonacionesService {
         }
 
         Producto producto = new Producto(
-                nuevoId,
+                null,
                 dto.nombre(),
                 dto.descripcion(),
                 categoria,
@@ -347,15 +347,15 @@ public class DonacionesService {
         Categoria categoria = categoriaRepository.findById(categoriaID)
                 .orElseThrow(() -> new CategoriaNoEncontradaException("Categoria no encontrada"));
 
-        String subcategoriaID = categoria.getSubcategoria() != null
+        String subcategoriaID = String.valueOf(categoria.getSubcategoria() != null
                 ? categoria.getSubcategoria().getId()
-                : null;
+                : null);
 
         return new CategoriaDTO(
                 categoria.getId(),
                 categoria.getNombre(),
                 categoria.getDescripcion(),
-                subcategoriaID
+                null
         );
     }
 
@@ -383,14 +383,10 @@ public class DonacionesService {
             throw new IdentificadorInvalidoException("Descripcion de identificador invalida");
         }
 
-        if (dto.id() != null && identificadorRepository.findById(dto.id()).isPresent()) {
-            throw new IdentificadorInvalidoException("El identificador ya existe");
-        }
-
         String nuevoId = String.valueOf(identificadorRepository.findAll().size() + 1);
 
         Identificador identificador = new Identificador(
-                nuevoId,
+                null,
                 dto.tipo() == TipoIdentificadorEnum.QR
                         ? TipoIdentificador.CODIGO_QR
                         : TipoIdentificador.CODIGO_BARRAS,
@@ -406,12 +402,12 @@ public class DonacionesService {
         return buscarIdentificadorPorID(identificador.getId());
     }
 
-    public IdentificadorDTO buscarIdentificadorPorID(String identificadorID) {
-        if (identificadorID == null || identificadorID.isBlank()) {
+    public IdentificadorDTO buscarIdentificadorPorID(Long identificadorID) {
+        if (identificadorID == null || identificadorID <= 0) {
             throw new IdentificadorInvalidoException("Identificador invalido");
         }
 
-        Identificador identificador = identificadorRepository.findById(identificadorID)
+        Identificador identificador = identificadorRepository.findById(String.valueOf(identificadorID))
                 .orElseThrow(() -> new IdentificadorNoEncontradoException("Identificador no encontrado"));
 
         return new IdentificadorDTO(
