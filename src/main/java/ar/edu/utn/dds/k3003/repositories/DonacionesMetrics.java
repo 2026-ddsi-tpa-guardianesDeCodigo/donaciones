@@ -7,11 +7,12 @@ import org.springframework.stereotype.Component;
 @Component
 public class DonacionesMetrics {
 
+    private final MeterRegistry meterRegistry;
+
     private final Counter donacionesRegistradas;
     private final Counter productosRegistrados;
     private final Counter identificadoresRegistrados;
     private final Counter categoriasRegistradas;
-    private final Counter errores;
     private final Counter donacionesAceptadas;
     private final Counter donacionesConQueja;
     private final Counter consultasPorDonador;
@@ -21,6 +22,9 @@ public class DonacionesMetrics {
     private final Counter enviosALogistica;
 
     public DonacionesMetrics(MeterRegistry registry) {
+
+        this.meterRegistry = registry;
+
         this.donacionesRegistradas = Counter.builder("donaciones.registradas")
                 .description("Cantidad de donaciones registradas")
                 .register(registry);
@@ -35,10 +39,6 @@ public class DonacionesMetrics {
 
         this.categoriasRegistradas = Counter.builder("categorias.registradas")
                 .description("Cantidad de categorias registradas")
-                .register(registry);
-
-        this.errores = Counter.builder("donaciones.errores")
-                .description("Cantidad de errores en el modulo de donaciones")
                 .register(registry);
 
         this.donacionesAceptadas = Counter.builder("donaciones.aceptadas")
@@ -86,10 +86,6 @@ public class DonacionesMetrics {
         categoriasRegistradas.increment();
     }
 
-    public void incrementarErrores() {
-        errores.increment();
-    }
-
     public void incrementarDonacionesAceptadas() {
         donacionesAceptadas.increment();
     }
@@ -116,5 +112,12 @@ public class DonacionesMetrics {
 
     public void incrementarEnviosALogistica() {
         enviosALogistica.increment();
+    }
+
+    public void incrementarError(String tipo) {
+        meterRegistry.counter(
+                "donaciones.errores",
+                "tipo", tipo
+        ).increment();
     }
 }

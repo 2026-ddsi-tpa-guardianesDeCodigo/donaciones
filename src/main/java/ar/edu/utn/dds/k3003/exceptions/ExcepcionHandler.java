@@ -1,12 +1,29 @@
 package ar.edu.utn.dds.k3003.exceptions;
 
+import ar.edu.utn.dds.k3003.repositories.DonacionesMetrics;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 @RestControllerAdvice
 public class ExcepcionHandler {
+
+    private final DonacionesMetrics metrics;
+
+    public ExcepcionHandler(DonacionesMetrics metrics) {
+        this.metrics = metrics;
+    }
+
+
+    // =========================
+    // 404 - NO ENCONTRADO
+    // =========================
 
     @ExceptionHandler({
             DonacionNoEncontradaException.class,
@@ -16,9 +33,18 @@ public class ExcepcionHandler {
             DonadorNoEncontradoException.class
     })
     public ResponseEntity<String> handleNotFound(RuntimeException e) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+
+        metrics.incrementarError("not_found");
+
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
                 .body(e.getMessage());
     }
+
+
+    // =========================
+    // 400 - ERRORES DEL NEGOCIO
+    // =========================
 
     @ExceptionHandler({
             DonacionInvalidaException.class,
@@ -30,13 +56,46 @@ public class ExcepcionHandler {
             DonadorYaExistenteException.class
     })
     public ResponseEntity<String> handleBadRequest(RuntimeException e) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+
+        metrics.incrementarError("bad_request");
+
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
                 .body(e.getMessage());
     }
 
+
+    // =========================
+    // 400 - REQUEST MAL FORMADO
+    // =========================
+
+    @ExceptionHandler({
+            HttpMessageNotReadableException.class,
+            MethodArgumentNotValidException.class,
+            MissingServletRequestParameterException.class,
+            MethodArgumentTypeMismatchException.class
+    })
+    public ResponseEntity<String> handleRequestInvalido(Exception e) {
+
+        metrics.incrementarError("bad_request");
+
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body("Request invalido");
+    }
+
+
+    // =========================
+    // 500 - ERROR INTERNO
+    // =========================
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<String> handleException(Exception e) {
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+
+        metrics.incrementarError("internal_error");
+
+        return ResponseEntity
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(e.getMessage());
     }
 }
