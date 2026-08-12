@@ -124,7 +124,8 @@ public class DonacionesMetrics {
         counter.increment();
 
         System.out.println(
-                STR."TIPO: \{tipo} | CONTADOR: \{counter.count()}"
+                "TIPO: " + tipo +
+                        " | CONTADOR: " + counter.count()
         );
     }
 }
