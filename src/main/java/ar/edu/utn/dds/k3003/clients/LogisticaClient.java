@@ -23,8 +23,8 @@ public class LogisticaClient{
             Integer cantidad
     ) {
         GestionDonacionRequest request = new GestionDonacionRequest(
-                depositoID,
                 donacionID,
+                depositoID,
                 productoID,
                 cantidad
         );

@@ -5,6 +5,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
+import java.util.Map;
+
 @Component
 public class DonadoresClient {
 
@@ -35,8 +37,10 @@ public class DonadoresClient {
 
     public void agregarQueja(QuejaDTO quejaDTO) {
         restClient.post()
-                .uri("/quejas")
-                .body(quejaDTO)
+                .uri("/donadores/{donadorID}/quejas", quejaDTO.donadorID())
+                .body(Map.of(
+                        "donacionID", String.valueOf(quejaDTO.donacionID()),
+                        "descripcion", quejaDTO.descripcion()))
                 .retrieve()
                 .toBodilessEntity();
     }
