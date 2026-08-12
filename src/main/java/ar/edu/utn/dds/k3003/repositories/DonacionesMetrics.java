@@ -115,9 +115,16 @@ public class DonacionesMetrics {
     }
 
     public void incrementarError(String tipo) {
-        meterRegistry.counter(
+
+        Counter counter = meterRegistry.counter(
                 "donaciones.errores",
                 "tipo", tipo
-        ).increment();
+        );
+
+        counter.increment();
+
+        System.out.println(
+                STR."TIPO: \{tipo} | CONTADOR: \{counter.count()}"
+        );
     }
 }
