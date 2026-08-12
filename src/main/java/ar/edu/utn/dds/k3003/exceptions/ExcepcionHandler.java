@@ -11,6 +11,7 @@ import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.client.RestClientResponseException;
 
 @RestControllerAdvice
 public class ExcepcionHandler {
@@ -84,6 +85,28 @@ public class ExcepcionHandler {
                 .status(HttpStatus.BAD_REQUEST)
                 .body("Request invalido");
     }
+    // =========================
+    // ERROR DE OTRO MICROSERVICIO
+    // =========================
+
+    @ExceptionHandler(RestClientResponseException.class)
+    public ResponseEntity<String> handleMicroservicio(
+            RestClientResponseException e) {
+
+        int status = e.getStatusCode().value();
+
+        if (status == 400) {
+            metrics.incrementarError("bad_request");
+        } else if (status == 404) {
+            metrics.incrementarError("not_found");
+        } else {
+            metrics.incrementarError("microservicio");
+        }
+
+        return ResponseEntity
+                .status(e.getStatusCode())
+                .body(e.getResponseBodyAsString());
+    }
 
 
     // =========================
@@ -100,4 +123,6 @@ public class ExcepcionHandler {
                 .body(e.getMessage());
     }
 }
+
+
 
