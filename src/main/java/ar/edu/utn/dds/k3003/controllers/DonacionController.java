@@ -35,9 +35,9 @@ public class DonacionController {
         return ResponseEntity.ok(donacionActualizada);
     }
 
-    @GetMapping("/buscarPorDonador/{donadorID}")
+    @GetMapping("/buscarPorDonador")
     public ResponseEntity<List<DonacionDTO>> buscarPorDonador(
-            @PathVariable Long donadorID
+            @RequestParam Long donadorID
     ) {
         List<DonacionDTO> donaciones = fachada.buscarPorDonador(donadorID);
         return ResponseEntity.ok(donaciones);
