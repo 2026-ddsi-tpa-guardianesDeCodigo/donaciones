@@ -214,13 +214,13 @@ public class DonacionesService {
     }
 
     public List<DonacionDTO> buscarPorDonador(Long donadorID) {
+
         if (donadorID == null) {
             throw new DonacionInvalidaException("Donador invalido");
         }
 
         return donacionesRepository.findAll().stream()
-                .filter(d -> d.getDonadorID() != null)
-                .filter(d -> false)
+                .filter(d -> String.valueOf(donadorID).equals(d.getDonadorID()))
                 .map(donacionMapper::toDonacionDTO)
                 .toList();
     }
