@@ -219,8 +219,12 @@ public class DonacionesService {
             throw new DonacionInvalidaException("Donador invalido");
         }
 
+        // Primero verifico que el donador exista
+        donadoresClient.buscarDonadorPorID(String.valueOf(donadorID));
+
         return donacionesRepository.findAll().stream()
-                .filter(d -> String.valueOf(donadorID).equals(d.getDonadorID()))
+                .filter(d -> d.getDonadorID() != null)
+                .filter(d -> d.getDonadorID().equals(String.valueOf(donadorID)))
                 .map(donacionMapper::toDonacionDTO)
                 .toList();
     }
