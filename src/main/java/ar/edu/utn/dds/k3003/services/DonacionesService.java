@@ -5,16 +5,23 @@ import ar.edu.utn.dds.k3003.catedra.dtos.donadoresYEntidades.QuejaDTO;
 import ar.edu.utn.dds.k3003.clients.DonadoresClient;
 import ar.edu.utn.dds.k3003.clients.LogisticaClient;
 import ar.edu.utn.dds.k3003.exceptions.*;
+import ar.edu.utn.dds.k3003.infra.logging.EventLogger;
+import ar.edu.utn.dds.k3003.infra.logging.EventoLog;
+import ar.edu.utn.dds.k3003.infra.logging.LogFields;
+import ar.edu.utn.dds.k3003.infra.logging.Outcome;
 import ar.edu.utn.dds.k3003.repositories.DonacionesMetrics;
 import ar.edu.utn.dds.k3003.model.*;
 import ar.edu.utn.dds.k3003.repositories.*;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 
 import java.time.LocalDate;
 import java.util.List;
 
 @Service
 public class DonacionesService {
+
+    private static final EventLogger LOG = EventLogger.of(DonacionesService.class);
 
     private final DonacionesRepository donacionesRepository;
     private final ProductoRepository productoRepository;
@@ -68,21 +75,39 @@ public class DonacionesService {
 
         String nuevoId = String.valueOf(donacionesRepository.findAll().size() + 1);
 
-        donadoresClient.buscarDonadorPorID(dto.donadorID());
+        try {
+            donadoresClient.buscarDonadorPorID(dto.donadorID());
+        } catch (HttpClientErrorException.NotFound e) {
+            // El WARN de la llamada ya lo emitió el interceptor; acá el evento de negocio.
+            rechazarDonacion("no_existe", dto);
+            throw e;
+        }
 
         Boolean puedeDonar = donadoresClient.puedeDonar(dto.donadorID());
         if (puedeDonar == null || !puedeDonar) {
+            rechazarDonacion("no_puede_donar", dto);
             throw new NoPuedeDonarException("No puede donar");
         }
 
-        buscarProductoInternoPorID(dto.productoID());
+        try {
+            buscarProductoInternoPorID(dto.productoID());
+        } catch (ProductoNoEncontradoException e) {
+            rechazarDonacion("producto_no_existe", dto);
+            throw e;
+        }
 
-        logisticaClient.gestionarDonacion(
-                dto.depositoID(),
-                nuevoId,
-                String.valueOf(dto.productoID()),
-                dto.cantidad()
-        );
+        try {
+            logisticaClient.gestionarDonacion(
+                    dto.depositoID(),
+                    nuevoId,
+                    String.valueOf(dto.productoID()),
+                    dto.cantidad()
+            );
+        } catch (HttpClientErrorException e) {
+            // Logística rechazó la donación (depósito lleno, cantidad inválida, depósito inexistente...)
+            rechazarDonacion("logistica_rechazo", dto);
+            throw e;
+        }
 
         if (metrics != null) {
             metrics.incrementarEnviosALogistica();
@@ -105,7 +130,23 @@ public class DonacionesService {
             metrics.incrementarDonacionesRegistradas();
         }
 
+        LOG.evento(EventoLog.DONACION_REGISTRADA, "Donación registrada")
+                .id(LogFields.DONACION, donacion.getId())
+                .id(LogFields.DONADOR, dto.donadorID())
+                .id(LogFields.DEPOSITO, dto.depositoID())
+                .id(LogFields.PRODUCTO, dto.productoID())
+                .dato(LogFields.CANTIDAD, dto.cantidad())
+                .emitir();
+
         return donacionMapper.toDonacionDTO(donacion);
+    }
+
+    private void rechazarDonacion(String motivo, DonacionDTO dto) {
+        LOG.evento(EventoLog.DONACION_RECHAZADA, "Donación rechazada")
+                .id(LogFields.DONADOR, dto.donadorID())
+                .id(LogFields.PRODUCTO, dto.productoID())
+                .dato(LogFields.MOTIVO, motivo)
+                .outcome(Outcome.FAILURE).warn().emitir();
     }
 
     public DonacionDTO buscarDonacionPorID(Long id) {
@@ -147,6 +188,12 @@ public class DonacionesService {
 
         donacion.setEstado(estado);
         donacionesRepository.save(donacion);
+
+        LOG.evento(EventoLog.DONACION_ESTADO_CAMBIADO, "Estado de donación cambiado")
+                .id(LogFields.DONACION, donacionID)
+                .dato(LogFields.EST_ANT, estadoActual)
+                .dato(LogFields.EST_NUE, estado)
+                .emitir();
 
         if (metrics != null) {
             metrics.incrementarCambiosEstado();
@@ -210,6 +257,10 @@ public class DonacionesService {
             metrics.incrementarQuejasRegistradas();
         }
 
+        LOG.evento(EventoLog.DONACION_QUEJA_REGISTRADA, "Queja registrada en la donación")
+                .id(LogFields.DONACION, donacionID)
+                .emitir();
+
         return cambiarEstadoDeDonacion(donacionID, EstadoDonacionEnum.CONQUEJA);
     }
 
@@ -259,7 +310,12 @@ public class DonacionesService {
                 .orElseThrow(() -> new IdentificadorNoEncontradoException("Identificador no encontrado"));
 
         if (!esValidoSegunIdentificador(dto.nombre(), dto.descripcion(), identificador)) {
-            throw new ProductoInvalidoException("Producto invalido segun identificador");
+            LOG.evento(EventoLog.PRODUCTO_VALIDACION_FALLIDA, "Producto rechazado por la regla de su identificador")
+                    .id(LogFields.IDENTIFICADOR, identificador.getId())
+                    .dato(LogFields.MOTIVO, identificador.getTipo() == TipoIdentificador.CODIGO_BARRAS
+                            ? "barras_descripcion_corta" : "qr_nombre_impar")
+                    .outcome(Outcome.FAILURE).warn().emitir();
+            throw new ProductoInvalidoSegunIdentificadorException("Producto invalido segun identificador");
         }
 
         Producto producto = new Producto(
@@ -275,6 +331,11 @@ public class DonacionesService {
         if (metrics != null) {
             metrics.incrementarProductosRegistrados();
         }
+
+        LOG.evento(EventoLog.PRODUCTO_CREADO, "Producto creado")
+                .id(LogFields.PRODUCTO, producto.getId())
+                .dato("tipo_identificador", identificador.getTipo())
+                .emitir();
 
         return productoDataMapper.toDTO(producto);
     }
@@ -334,6 +395,10 @@ public class DonacionesService {
         if (metrics != null) {
             metrics.incrementarCategoriasRegistradas();
         }
+
+        LOG.evento(EventoLog.CATEGORIA_CREADA, "Categoría creada")
+                .id(LogFields.CATEGORIA, guardada.getId())
+                .emitir();
 
         return new CategoriaDTO(
                 guardada.getId(),
@@ -403,6 +468,10 @@ public class DonacionesService {
             metrics.incrementarIdentificadoresRegistrados();
         }
 
+        LOG.evento(EventoLog.IDENTIFICADOR_CREADO, "Identificador creado")
+                .id(LogFields.IDENTIFICADOR, identificador.getId())
+                .emitir();
+
         return buscarIdentificadorPorID(identificador.getId());
     }
 
@@ -446,6 +515,9 @@ public class DonacionesService {
         productoRepository.deleteAll();
         categoriaRepository.deleteAll();
         identificadorRepository.deleteAll();
+
+        LOG.evento(EventoLog.DEBUG_RESET_EJECUTADO, "Base de datos limpiada")
+                .warn().emitir();
     }
 
     private boolean esValidoSegunIdentificador(
