@@ -46,4 +46,12 @@ public class Categoria {
     public Subcategoria getSubcategoria() {
         return subcategoria;
     }
+
+    public void setNombre(String nombre) {
+        this.nombre = nombre;
+    }
+
+    public void setDescripcion(String descripcion) {
+        this.descripcion = descripcion;
+    }
 }

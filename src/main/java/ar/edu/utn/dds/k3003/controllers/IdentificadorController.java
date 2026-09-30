@@ -33,4 +33,14 @@ public class IdentificadorController {
     public ResponseEntity<List<IdentificadorDTO>> listarIdentificadores() {
         return ResponseEntity.ok(fachada.listarIdentificadores());
     }
+
+    @PatchMapping("/{identificadorID}")
+    public ResponseEntity<IdentificadorDTO> editarIdentificador(@PathVariable Long identificadorID, @RequestBody IdentificadorDTO identificadorDTO) {
+        return ResponseEntity.ok(fachada.editarIdentificador(identificadorID, identificadorDTO));
+    }
+
+    @DeleteMapping("/{identificadorID}")
+    public ResponseEntity<IdentificadorDTO> borrarIdentificador(@PathVariable Long identificadorID) {
+        return ResponseEntity.ok(fachada.borrarIdentificador(identificadorID));
+    }
 }

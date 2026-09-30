@@ -37,4 +37,12 @@ public class Identificador {
     public String getDescripcion() {
         return descripcion;
     }
+
+    public void setTipo(TipoIdentificador tipo) {
+        this.tipo = tipo;
+    }
+
+    public void setDescripcion(String descripcion) {
+        this.descripcion = descripcion;
+    }
 }

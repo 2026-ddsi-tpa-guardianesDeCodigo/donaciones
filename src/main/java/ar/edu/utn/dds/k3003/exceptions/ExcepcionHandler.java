@@ -92,6 +92,21 @@ public class ExcepcionHandler {
     }
 
     // =========================
+    // 409 - CONFLICTO (el recurso existe, pero borrarlo dejaría referencias colgando)
+    // =========================
+
+    @ExceptionHandler({ProductoEnUsoException.class, CategoriaEnUsoException.class,
+            IdentificadorEnUsoException.class})
+    public ResponseEntity<String> handleConflicto(RuntimeException e) {
+
+        metrics.incrementarError("conflicto");
+
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(e.getMessage());
+    }
+
+    // =========================
     // 400 - REQUEST MAL FORMADO
     // =========================
 
