@@ -203,6 +203,16 @@ public class DonacionesService {
 
     /** Compartida entre cambiarEstadoDeDonacion y registrarQuejaEnDonacion (validar antes de tocar Donadores). */
     private void validarTransicion(EstadoDonacionEnum actual, EstadoDonacionEnum nuevo) {
+        // La máquina de estados es lineal (INGRESADA → ACEPTADA → CONQUEJA, sin vuelta atrás):
+        // INGRESADA solo se asigna al crear la donación (registrarDonacion), nunca via este
+        // endpoint. Antes no había ningún guard para este caso: cualquier estado podía volver a
+        // INGRESADA con un PATCH /donaciones/estado directo.
+        if (nuevo == EstadoDonacionEnum.INGRESADA) {
+            throw new TransicionEstadoInvalidaException(
+                    "Transicion invalida: no se puede volver a INGRESADA una vez creada la donacion"
+            );
+        }
+
         if (nuevo == EstadoDonacionEnum.ACEPTADA && actual != EstadoDonacionEnum.INGRESADA) {
             throw new TransicionEstadoInvalidaException(
                     "Transicion invalida: para aceptar, la donacion debe estar INGRESADA"

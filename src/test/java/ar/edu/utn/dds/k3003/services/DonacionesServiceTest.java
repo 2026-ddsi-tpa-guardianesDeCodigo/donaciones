@@ -31,11 +31,12 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 /**
- * Regresión de dos bugs del core corregidos para la Entrega 5 (ver CONTEXTO_E5.md §5, F1 y F3):
+ * Regresión de bugs del core corregidos para la Entrega 5 (ver CONTEXTO_E5.md §5 y §8-A, F1/F3/A3):
  *  - F1: registrarDonacion le avisaba a Logística un id calculado (findAll().size()+1), no el
  *    id real que iba a asignar la base.
  *  - F3: registrarQuejaEnDonacion registraba la queja en Donadores (y pisaba la descripción de
  *    la donación) ANTES de validar que la donación estuviera ACEPTADA.
+ *  - A3: PATCH /donaciones/estado no tenía ningún guard para volver a INGRESADA.
  */
 class DonacionesServiceTest {
 
@@ -134,5 +135,19 @@ class DonacionesServiceTest {
         assertEquals(EstadoDonacionEnum.CONQUEJA, resultado.estado());
         // La descripción de la donación no se pisa con el texto de la queja.
         assertEquals("una donación", resultado.descripcion());
+    }
+
+    // ---------------------------------------------------------------- A3: guard →INGRESADA
+
+    @Test
+    void cambiarEstado_aIngresada_siempreRechazado() {
+        Donacion donacionAceptada = new Donacion(9L, "7", "1", "una donación", 3L, 5,
+                EstadoDonacionEnum.ACEPTADA, LocalDate.now());
+        when(donacionesRepository.findById(9L)).thenReturn(Optional.of(donacionAceptada));
+
+        assertThrows(TransicionEstadoInvalidaException.class,
+                () -> service.cambiarEstadoDeDonacion(9L, EstadoDonacionEnum.INGRESADA));
+
+        verify(donacionesRepository, never()).save(any());
     }
 }
