@@ -33,4 +33,14 @@ public class CategoriaController {
     public ResponseEntity<List<CategoriaDTO>> listarCategorias() {
         return ResponseEntity.ok(fachada.listarCategorias());
     }
+
+    @PatchMapping("/{categoriaID}")
+    public ResponseEntity<CategoriaDTO> editarCategoria(@PathVariable Long categoriaID, @RequestBody CategoriaDTO categoriaDTO) {
+        return ResponseEntity.ok(fachada.editarCategoria(categoriaID, categoriaDTO));
+    }
+
+    @DeleteMapping("/{categoriaID}")
+    public ResponseEntity<CategoriaDTO> borrarCategoria(@PathVariable Long categoriaID) {
+        return ResponseEntity.ok(fachada.borrarCategoria(categoriaID));
+    }
 }

@@ -61,6 +61,14 @@ public class Fachada implements FachadaDonaciones {
     return donacionesService.listarProductos();
   }
 
+  public ProductoDTO editarProducto(Long productoID, ProductoDTO dto) {
+    return donacionesService.editarProducto(productoID, dto);
+  }
+
+  public ProductoDTO borrarProducto(Long productoID) {
+    return donacionesService.borrarProducto(productoID);
+  }
+
   public CategoriaDTO agregarCategoria(CategoriaDTO dto) {
     meterRegistry.counter("donaciones.categorias.agregadas").increment();
     return donacionesService.agregarCategoria(dto);
@@ -74,6 +82,14 @@ public class Fachada implements FachadaDonaciones {
     return donacionesService.listarCategorias();
   }
 
+  public CategoriaDTO editarCategoria(Long categoriaID, CategoriaDTO dto) {
+    return donacionesService.editarCategoria(categoriaID, dto);
+  }
+
+  public CategoriaDTO borrarCategoria(Long categoriaID) {
+    return donacionesService.borrarCategoria(categoriaID);
+  }
+
   public IdentificadorDTO agregarIdentificador(IdentificadorDTO dto) {
     return donacionesService.agregarIdentificador(dto);
   }
@@ -84,6 +100,14 @@ public class Fachada implements FachadaDonaciones {
 
   public List<IdentificadorDTO> listarIdentificadores() {
     return donacionesService.listarIdentificadores();
+  }
+
+  public IdentificadorDTO editarIdentificador(Long identificadorID, IdentificadorDTO dto) {
+    return donacionesService.editarIdentificador(identificadorID, dto);
+  }
+
+  public IdentificadorDTO borrarIdentificador(Long identificadorID) {
+    return donacionesService.borrarIdentificador(identificadorID);
   }
 
   public List<DonacionDTO> listarDonaciones() {

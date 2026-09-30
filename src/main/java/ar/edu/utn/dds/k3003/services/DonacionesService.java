@@ -390,6 +390,77 @@ public class DonacionesService {
                 .toList();
     }
 
+    /**
+     * ABM (E5, A8): edita un producto. Solo se tocan los campos presentes en el body (semántica
+     * de PATCH). Si nombre, descripción, categoría o identificador cambian, se re-valida la
+     * regla del identificador con los valores finales (no solo con los que llegaron en el body),
+     * para no dejar un producto guardado que ya no cumple la regla de su propio identificador.
+     */
+    public ProductoDTO editarProducto(Long productoID, ProductoDTO dto) {
+        Producto producto = buscarProductoInternoPorID(productoID);
+
+        Categoria categoriaFinal = producto.getCategoria();
+        if (dto.categoriaID() != null) {
+            categoriaFinal = categoriaRepository.findById(dto.categoriaID())
+                    .orElseThrow(() -> new CategoriaNoEncontradaException("Categoria no encontrada"));
+        }
+
+        Identificador identificadorFinal = producto.getIdentificador();
+        if (dto.identificadorID() != null) {
+            identificadorFinal = identificadorRepository.findById(dto.identificadorID())
+                    .orElseThrow(() -> new IdentificadorNoEncontradoException("Identificador no encontrado"));
+        }
+
+        String nombreFinal = dto.nombre() != null ? dto.nombre() : producto.getNombre();
+        String descripcionFinal = dto.descripcion() != null ? dto.descripcion() : producto.getDescripcion();
+
+        if (!esValidoSegunIdentificador(nombreFinal, descripcionFinal, identificadorFinal)) {
+            LOG.evento(EventoLog.PRODUCTO_VALIDACION_FALLIDA, "Producto rechazado por la regla de su identificador")
+                    .id(LogFields.IDENTIFICADOR, identificadorFinal.getId())
+                    .dato(LogFields.MOTIVO, identificadorFinal.getTipo() == TipoIdentificador.CODIGO_BARRAS
+                            ? "barras_descripcion_corta" : "qr_nombre_impar")
+                    .outcome(Outcome.FAILURE).warn().emitir();
+            throw new ProductoInvalidoSegunIdentificadorException("Producto invalido segun identificador");
+        }
+
+        producto.setNombre(nombreFinal);
+        producto.setDescripcion(descripcionFinal);
+        producto.setCategoria(categoriaFinal);
+        producto.setIdentificador(identificadorFinal);
+        productoRepository.save(producto);
+
+        LOG.evento(EventoLog.PRODUCTO_EDITADO, "Producto editado")
+                .id(LogFields.PRODUCTO, productoID)
+                .emitir();
+
+        return productoDataMapper.toDTO(producto);
+    }
+
+    /**
+     * ABM (E5, A8): borra un producto. Se rechaza si hay donaciones que lo referencian: esas
+     * donaciones quedarían apuntando a un producto inexistente.
+     */
+    public ProductoDTO borrarProducto(Long productoID) {
+        Producto producto = buscarProductoInternoPorID(productoID);
+
+        if (donacionesRepository.existsByProductoID(productoID)) {
+            LOG.evento(EventoLog.PRODUCTO_BORRADO, "Producto no borrado")
+                    .id(LogFields.PRODUCTO, productoID)
+                    .dato(LogFields.MOTIVO, "tiene_donaciones")
+                    .outcome(Outcome.FAILURE).warn().emitir();
+            throw new ProductoEnUsoException(
+                    "El producto tiene donaciones registradas: no se puede borrar");
+        }
+
+        productoRepository.deleteById(productoID);
+
+        LOG.evento(EventoLog.PRODUCTO_BORRADO, "Producto borrado")
+                .id(LogFields.PRODUCTO, productoID)
+                .warn().emitir();
+
+        return productoDataMapper.toDTO(producto);
+    }
+
     public CategoriaDTO agregarCategoria(CategoriaDTO dto) {
         if (dto == null) {
             throw new CategoriaInvalidaException("Categoria invalida");
@@ -459,6 +530,49 @@ public class DonacionesService {
                 .toList();
     }
 
+    /** ABM (E5, A8): edita una categoría. Semántica de PATCH: solo se tocan los campos presentes. */
+    public CategoriaDTO editarCategoria(Long categoriaID, CategoriaDTO dto) {
+        Categoria categoria = categoriaRepository.findById(categoriaID)
+                .orElseThrow(() -> new CategoriaNoEncontradaException("Categoria no encontrada"));
+
+        if (dto.nombre() != null) categoria.setNombre(dto.nombre());
+        if (dto.descripcion() != null) categoria.setDescripcion(dto.descripcion());
+
+        categoriaRepository.save(categoria);
+
+        LOG.evento(EventoLog.CATEGORIA_EDITADA, "Categoría editada")
+                .id(LogFields.CATEGORIA, categoriaID)
+                .emitir();
+
+        return new CategoriaDTO(categoria.getId(), categoria.getNombre(), categoria.getDescripcion(), null);
+    }
+
+    /**
+     * ABM (E5, A8): borra una categoría. Se rechaza si hay productos que la referencian: esos
+     * productos quedarían apuntando a una categoría inexistente.
+     */
+    public CategoriaDTO borrarCategoria(Long categoriaID) {
+        Categoria categoria = categoriaRepository.findById(categoriaID)
+                .orElseThrow(() -> new CategoriaNoEncontradaException("Categoria no encontrada"));
+
+        if (productoRepository.existsByCategoria_Id(categoriaID)) {
+            LOG.evento(EventoLog.CATEGORIA_BORRADA, "Categoría no borrada")
+                    .id(LogFields.CATEGORIA, categoriaID)
+                    .dato(LogFields.MOTIVO, "tiene_productos")
+                    .outcome(Outcome.FAILURE).warn().emitir();
+            throw new CategoriaEnUsoException(
+                    "La categoría tiene productos registrados: no se puede borrar");
+        }
+
+        categoriaRepository.deleteById(categoriaID);
+
+        LOG.evento(EventoLog.CATEGORIA_BORRADA, "Categoría borrada")
+                .id(LogFields.CATEGORIA, categoriaID)
+                .warn().emitir();
+
+        return new CategoriaDTO(categoria.getId(), categoria.getNombre(), categoria.getDescripcion(), null);
+    }
+
     public IdentificadorDTO agregarIdentificador(IdentificadorDTO dto) {
         if (dto == null) {
             throw new IdentificadorInvalidoException("Identificador invalido");
@@ -522,6 +636,58 @@ public class DonacionesService {
                         i.getDescripcion()
                 ))
                 .toList();
+    }
+
+    /**
+     * ABM (E5, A8): edita un identificador. Semántica de PATCH: solo se tocan los campos
+     * presentes. No re-valida los productos que ya usan este identificador (cambiar el tipo o la
+     * descripción de un identificador compartido podría dejar productos existentes inválidos
+     * contra su propia regla; se documenta como limitación, igual que el período de las
+     * necesidades recurrentes en Donadores).
+     */
+    public IdentificadorDTO editarIdentificador(Long identificadorID, IdentificadorDTO dto) {
+        Identificador identificador = identificadorRepository.findById(identificadorID)
+                .orElseThrow(() -> new IdentificadorNoEncontradoException("Identificador no encontrado"));
+
+        if (dto.tipo() != null) {
+            identificador.setTipo(dto.tipo() == TipoIdentificadorEnum.QR
+                    ? TipoIdentificador.CODIGO_QR
+                    : TipoIdentificador.CODIGO_BARRAS);
+        }
+        if (dto.descripcion() != null) identificador.setDescripcion(dto.descripcion());
+
+        identificadorRepository.save(identificador);
+
+        LOG.evento(EventoLog.IDENTIFICADOR_EDITADO, "Identificador editado")
+                .id(LogFields.IDENTIFICADOR, identificadorID)
+                .emitir();
+
+        return buscarIdentificadorPorID(identificadorID);
+    }
+
+    /**
+     * ABM (E5, A8): borra un identificador. Se rechaza si hay productos que lo referencian: esos
+     * productos quedarían apuntando a un identificador inexistente.
+     */
+    public IdentificadorDTO borrarIdentificador(Long identificadorID) {
+        IdentificadorDTO identificadorDTO = buscarIdentificadorPorID(identificadorID);
+
+        if (productoRepository.existsByIdentificador_Id(identificadorID)) {
+            LOG.evento(EventoLog.IDENTIFICADOR_BORRADO, "Identificador no borrado")
+                    .id(LogFields.IDENTIFICADOR, identificadorID)
+                    .dato(LogFields.MOTIVO, "tiene_productos")
+                    .outcome(Outcome.FAILURE).warn().emitir();
+            throw new IdentificadorEnUsoException(
+                    "El identificador tiene productos registrados: no se puede borrar");
+        }
+
+        identificadorRepository.deleteById(identificadorID);
+
+        LOG.evento(EventoLog.IDENTIFICADOR_BORRADO, "Identificador borrado")
+                .id(LogFields.IDENTIFICADOR, identificadorID)
+                .warn().emitir();
+
+        return identificadorDTO;
     }
 
     public List<DonacionDTO> listarDonaciones() {

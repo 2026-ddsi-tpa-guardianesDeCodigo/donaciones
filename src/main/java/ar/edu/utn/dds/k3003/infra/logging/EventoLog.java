@@ -16,8 +16,14 @@ public enum EventoLog {
     DONACION_QUEJA_REGISTRADA("donacion.queja.registrada"),
     PRODUCTO_CREADO("producto.creado"),
     PRODUCTO_VALIDACION_FALLIDA("producto.validacion.fallida"),
+    PRODUCTO_EDITADO("producto.editado"),
+    PRODUCTO_BORRADO("producto.borrado"),
     CATEGORIA_CREADA("categoria.creada"),
+    CATEGORIA_EDITADA("categoria.editada"),
+    CATEGORIA_BORRADA("categoria.borrada"),
     IDENTIFICADOR_CREADO("identificador.creado"),
+    IDENTIFICADOR_EDITADO("identificador.editado"),
+    IDENTIFICADOR_BORRADO("identificador.borrado"),
     DEBUG_RESET_EJECUTADO("debug.reset.ejecutado");
 
     private final String action;

@@ -55,4 +55,20 @@ public class Producto {
     public Identificador getIdentificador() {
         return identificador;
     }
+
+    public void setNombre(String nombre) {
+        this.nombre = nombre;
+    }
+
+    public void setDescripcion(String descripcion) {
+        this.descripcion = descripcion;
+    }
+
+    public void setCategoria(Categoria categoria) {
+        this.categoria = categoria;
+    }
+
+    public void setIdentificador(Identificador identificador) {
+        this.identificador = identificador;
+    }
 }

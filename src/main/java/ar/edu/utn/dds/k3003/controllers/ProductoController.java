@@ -33,4 +33,14 @@ public class ProductoController {
     public ResponseEntity<List<ProductoDTO>> listarProductos() {
         return ResponseEntity.ok(fachada.listarProductos());
     }
+
+    @PatchMapping("/{productoID}")
+    public ResponseEntity<ProductoDTO> editarProducto(@PathVariable Long productoID, @RequestBody ProductoDTO productoDTO) {
+        return ResponseEntity.ok(fachada.editarProducto(productoID, productoDTO));
+    }
+
+    @DeleteMapping("/{productoID}")
+    public ResponseEntity<ProductoDTO> borrarProducto(@PathVariable Long productoID) {
+        return ResponseEntity.ok(fachada.borrarProducto(productoID));
+    }
 }
