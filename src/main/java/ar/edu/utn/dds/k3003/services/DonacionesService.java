@@ -69,11 +69,9 @@ public class DonacionesService {
             throw new DonacionInvalidaException("Producto invalido");
         }
 
-        if (dto.cantidad() <= 0) {
+        if (dto.cantidad() == null || dto.cantidad() <= 0) {
             throw new DonacionInvalidaException("La cantidad debe ser mayor a cero");
         }
-
-        String nuevoId = String.valueOf(donacionesRepository.findAll().size() + 1);
 
         try {
             donadoresClient.buscarDonadorPorID(dto.donadorID());
@@ -96,23 +94,11 @@ public class DonacionesService {
             throw e;
         }
 
-        try {
-            logisticaClient.gestionarDonacion(
-                    dto.depositoID(),
-                    nuevoId,
-                    String.valueOf(dto.productoID()),
-                    dto.cantidad()
-            );
-        } catch (HttpClientErrorException e) {
-            // Logística rechazó la donación (depósito lleno, cantidad inválida, depósito inexistente...)
-            rechazarDonacion("logistica_rechazo", dto);
-            throw e;
-        }
-
-        if (metrics != null) {
-            metrics.incrementarEnviosALogistica();
-        }
-
+        // Se persiste ANTES de avisarle a Logística, para poder mandarle el id real. Antes se
+        // usaba nuevoId = findAll().size()+1, calculado sin guardar nada: casi nunca coincidía
+        // con el id real que iba a asignar la base (las secuencias de Postgres tampoco se
+        // reinician con /debug/reset), así que reportarEntrega (PATCH /donaciones/estado) nunca
+        // encontraba la donación y quedaba INGRESADA para siempre, o peor, pisaba otra.
         Donacion donacion = new Donacion(
                 null,
                 dto.donadorID(),
@@ -123,10 +109,26 @@ public class DonacionesService {
                 EstadoDonacionEnum.INGRESADA,
                 LocalDate.now()
         );
-
         donacionesRepository.save(donacion);
 
+        try {
+            logisticaClient.gestionarDonacion(
+                    dto.depositoID(),
+                    String.valueOf(donacion.getId()),
+                    String.valueOf(dto.productoID()),
+                    dto.cantidad()
+            );
+        } catch (HttpClientErrorException e) {
+            // Logística rechazó la donación (depósito lleno, cantidad inválida, depósito
+            // inexistente...): se revierte lo persistido para no dejar una donación INGRESADA
+            // que Logística nunca va a procesar.
+            donacionesRepository.deleteById(donacion.getId());
+            rechazarDonacion("logistica_rechazo", dto);
+            throw e;
+        }
+
         if (metrics != null) {
+            metrics.incrementarEnviosALogistica();
             metrics.incrementarDonacionesRegistradas();
         }
 
@@ -173,18 +175,7 @@ public class DonacionesService {
                 .orElseThrow(() -> new DonacionNoEncontradaException("Donacion no encontrada"));
 
         EstadoDonacionEnum estadoActual = donacion.getEstado();
-
-        if (estado == EstadoDonacionEnum.ACEPTADA && estadoActual != EstadoDonacionEnum.INGRESADA) {
-            throw new TransicionEstadoInvalidaException(
-                    "Transicion invalida: para aceptar, la donacion debe estar INGRESADA"
-            );
-        }
-
-        if (estado == EstadoDonacionEnum.CONQUEJA && estadoActual != EstadoDonacionEnum.ACEPTADA) {
-            throw new TransicionEstadoInvalidaException(
-                    "Transicion invalida: para registrar queja, la donacion debe estar ACEPTADA"
-            );
-        }
+        validarTransicion(estadoActual, estado);
 
         donacion.setEstado(estado);
         donacionesRepository.save(donacion);
@@ -208,6 +199,31 @@ public class DonacionesService {
         }
 
         return donacionMapper.toDonacionDTO(donacion);
+    }
+
+    /** Compartida entre cambiarEstadoDeDonacion y registrarQuejaEnDonacion (validar antes de tocar Donadores). */
+    private void validarTransicion(EstadoDonacionEnum actual, EstadoDonacionEnum nuevo) {
+        // La máquina de estados es lineal (INGRESADA → ACEPTADA → CONQUEJA, sin vuelta atrás):
+        // INGRESADA solo se asigna al crear la donación (registrarDonacion), nunca via este
+        // endpoint. Antes no había ningún guard para este caso: cualquier estado podía volver a
+        // INGRESADA con un PATCH /donaciones/estado directo.
+        if (nuevo == EstadoDonacionEnum.INGRESADA) {
+            throw new TransicionEstadoInvalidaException(
+                    "Transicion invalida: no se puede volver a INGRESADA una vez creada la donacion"
+            );
+        }
+
+        if (nuevo == EstadoDonacionEnum.ACEPTADA && actual != EstadoDonacionEnum.INGRESADA) {
+            throw new TransicionEstadoInvalidaException(
+                    "Transicion invalida: para aceptar, la donacion debe estar INGRESADA"
+            );
+        }
+
+        if (nuevo == EstadoDonacionEnum.CONQUEJA && actual != EstadoDonacionEnum.ACEPTADA) {
+            throw new TransicionEstadoInvalidaException(
+                    "Transicion invalida: para registrar queja, la donacion debe estar ACEPTADA"
+            );
+        }
     }
 
     public List<DonacionDTO> buscarPorDonadorYFechaInicio(String donadorID, LocalDate fecha) {
@@ -240,6 +256,13 @@ public class DonacionesService {
         Donacion donacion = donacionesRepository.findById(donacionID)
                 .orElseThrow(() -> new DonacionNoEncontradaException("Donacion no encontrada"));
 
+        // Se valida ANTES de registrar la queja en Donadores (efecto con otro componente) y de
+        // tocar la donación acá. Antes esto se validaba recién en cambiarEstadoDeDonacion, al
+        // final: si la donación no estaba ACEPTADA, la queja ya había quedado creada en Donadores
+        // igual, sin forma de deshacerla, y encima se pisaba la descripción original de la
+        // donación con el texto de la queja antes de fallar.
+        validarTransicion(donacion.getEstado(), EstadoDonacionEnum.CONQUEJA);
+
         QuejaDTO queja = new QuejaDTO(
                 null,
                 donacionID,
@@ -249,9 +272,6 @@ public class DonacionesService {
         );
 
         donadoresClient.agregarQueja(queja);
-
-        donacion.setDescripcion(descripcion);
-        donacionesRepository.save(donacion);
 
         if (metrics != null) {
             metrics.incrementarQuejasRegistradas();
