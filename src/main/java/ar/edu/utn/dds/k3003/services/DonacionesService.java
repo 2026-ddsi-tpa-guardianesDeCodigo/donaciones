@@ -321,8 +321,6 @@ public class DonacionesService {
             throw new ProductoInvalidoException("Identificador invalido");
         }
 
-        String nuevoId = String.valueOf(productoRepository.findAll().size() + 1);
-
         Categoria categoria = categoriaRepository.findById(dto.categoriaID())
                 .orElseThrow(() -> new CategoriaNoEncontradaException("Categoria no encontrada"));
 
@@ -471,8 +469,6 @@ public class DonacionesService {
         if (dto.descripcion() == null || dto.descripcion().isBlank()) {
             throw new IdentificadorInvalidoException("Descripcion de identificador invalida");
         }
-
-        String nuevoId = String.valueOf(identificadorRepository.findAll().size() + 1);
 
         Identificador identificador = new Identificador(
                 null,
