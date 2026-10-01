@@ -70,7 +70,7 @@ public class Fachada implements FachadaDonaciones {
   }
 
   public CategoriaDTO agregarCategoria(CategoriaDTO dto) {
-    meterRegistry.counter("donaciones.categorias.agregadas").increment();
+    meterRegistry.counter("negocio.donaciones.categorias.agregadas").increment();
     return donacionesService.agregarCategoria(dto);
   }
 
