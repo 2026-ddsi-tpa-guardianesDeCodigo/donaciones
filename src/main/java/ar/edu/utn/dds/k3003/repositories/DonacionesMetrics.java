@@ -25,47 +25,47 @@ public class DonacionesMetrics {
 
         this.meterRegistry = registry;
 
-        this.donacionesRegistradas = Counter.builder("donaciones.registradas")
+        this.donacionesRegistradas = Counter.builder("negocio.donaciones.registradas")
                 .description("Cantidad de donaciones registradas")
                 .register(registry);
 
-        this.productosRegistrados = Counter.builder("productos.registrados")
+        this.productosRegistrados = Counter.builder("negocio.donaciones.productos.registrados")
                 .description("Cantidad de productos registrados")
                 .register(registry);
 
-        this.identificadoresRegistrados = Counter.builder("identificadores.registrados")
+        this.identificadoresRegistrados = Counter.builder("negocio.donaciones.identificadores.registrados")
                 .description("Cantidad de identificadores registrados")
                 .register(registry);
 
-        this.categoriasRegistradas = Counter.builder("categorias.registradas")
+        this.categoriasRegistradas = Counter.builder("negocio.donaciones.categorias.registradas")
                 .description("Cantidad de categorias registradas")
                 .register(registry);
 
-        this.donacionesAceptadas = Counter.builder("donaciones.aceptadas")
+        this.donacionesAceptadas = Counter.builder("negocio.donaciones.aceptadas")
                 .description("Cantidad de donaciones aceptadas")
                 .register(registry);
 
-        this.donacionesConQueja = Counter.builder("donaciones.con_queja")
+        this.donacionesConQueja = Counter.builder("negocio.donaciones.con_queja")
                 .description("Cantidad de donaciones con queja")
                 .register(registry);
 
-        this.consultasPorDonador = Counter.builder("donaciones.consultas_por_donador")
+        this.consultasPorDonador = Counter.builder("negocio.donaciones.consultas_por_donador")
                 .description("Consultas de donaciones por donador")
                 .register(registry);
 
-        this.consultasProductoPorId = Counter.builder("productos.consultas_por_id")
+        this.consultasProductoPorId = Counter.builder("negocio.donaciones.productos.consultas_por_id")
                 .description("Consultas de productos por ID")
                 .register(registry);
 
-        this.cambiosEstado = Counter.builder("donaciones.cambios_estado")
+        this.cambiosEstado = Counter.builder("negocio.donaciones.cambios_estado")
                 .description("Cambios de estado de donaciones")
                 .register(registry);
 
-        this.quejasRegistradas = Counter.builder("donaciones.quejas")
+        this.quejasRegistradas = Counter.builder("negocio.donaciones.quejas")
                 .description("Quejas registradas")
                 .register(registry);
 
-        this.enviosALogistica = Counter.builder("donaciones.envios_logistica")
+        this.enviosALogistica = Counter.builder("negocio.donaciones.envios_logistica")
                 .description("Donaciones enviadas a logistica")
                 .register(registry);
     }
