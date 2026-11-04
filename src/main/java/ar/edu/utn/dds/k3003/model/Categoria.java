@@ -1,14 +1,23 @@
 package ar.edu.utn.dds.k3003.model;
 
+import ar.edu.utn.dds.k3003.eventos.PublicadorDeCambios;
 import jakarta.persistence.*;
 
 @Entity
+@EntityListeners(PublicadorDeCambios.class)
 @Table(name = "categorias")
 public class Categoria {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    // Versión optimista (JPA). Viaja en cada evento del modelo de lectura (E6): el consumidor solo
+    // aplica snapshots con versión mayor a la que ya tiene. El default de columna cubre las filas
+    // existentes cuando ddl-auto=update agrega la columna.
+    @Version
+    @Column(name = "version", columnDefinition = "bigint default 0")
+    private Long version;
 
     private String nombre;
 
@@ -35,6 +44,10 @@ public class Categoria {
         return id;
     }
 
+    public Long getVersion() {
+        return version;
+    }
+
     public String getNombre() {
         return nombre;
     }
@@ -45,6 +58,10 @@ public class Categoria {
 
     public Subcategoria getSubcategoria() {
         return subcategoria;
+    }
+
+    public void setSubcategoria(Subcategoria subcategoria) {
+        this.subcategoria = subcategoria;
     }
 
     public void setNombre(String nombre) {

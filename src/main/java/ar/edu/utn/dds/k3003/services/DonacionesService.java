@@ -12,6 +12,7 @@ import ar.edu.utn.dds.k3003.infra.logging.Outcome;
 import ar.edu.utn.dds.k3003.repositories.DonacionesMetrics;
 import ar.edu.utn.dds.k3003.model.*;
 import ar.edu.utn.dds.k3003.repositories.*;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 
@@ -30,6 +31,8 @@ public class DonacionesService {
     private final DonadoresClient donadoresClient;
     private final LogisticaClient logisticaClient;
     private final DonacionesMetrics metrics;
+    // Por setter y no por constructor para no cambiar la firma que ya usan los tests.
+    private SubcategoriaRepository subcategoriaRepository;
 
     private final DonacionMapper donacionMapper = new DonacionMapper();
     private final ProductoDataMapper productoDataMapper = new ProductoDataMapper();
@@ -50,6 +53,40 @@ public class DonacionesService {
         this.donadoresClient = donadoresClient;
         this.logisticaClient = logisticaClient;
         this.metrics = metrics;
+    }
+
+    @Autowired
+    public void setSubcategoriaRepository(SubcategoriaRepository subcategoriaRepository) {
+        this.subcategoriaRepository = subcategoriaRepository;
+    }
+
+    public SubcategoriaDTO agregarSubcategoria(SubcategoriaDTO dto) {
+        if (dto == null || dto.nombre() == null || dto.nombre().isBlank()) {
+            throw new CategoriaInvalidaException("Nombre de subcategoria invalido");
+        }
+        Subcategoria guardada = subcategoriaRepository.save(new Subcategoria(null, dto.nombre(), null));
+        LOG.evento(EventoLog.SUBCATEGORIA_CREADA, "Subcategoría creada")
+                .id("donatrack.subcategoria_id", guardada.getId())
+                .emitir();
+        return new SubcategoriaDTO(guardada.getId(), guardada.getNombre());
+    }
+
+    public List<SubcategoriaDTO> listarSubcategorias() {
+        return subcategoriaRepository.findAll().stream()
+                .map(s -> new SubcategoriaDTO(s.getId(), s.getNombre()))
+                .toList();
+    }
+
+    private Subcategoria resolverSubcategoria(Long subcategoriaID) {
+        if (subcategoriaID == null) {
+            return null;
+        }
+        return subcategoriaRepository.findById(subcategoriaID)
+                .orElseThrow(() -> new CategoriaInvalidaException("Subcategoria no encontrada"));
+    }
+
+    private static Long idDeSubcategoria(Categoria categoria) {
+        return categoria.getSubcategoria() == null ? null : categoria.getSubcategoria().getId();
     }
 
     public DonacionDTO registrarDonacion(DonacionDTO dto) {
@@ -476,7 +513,7 @@ public class DonacionesService {
                 null,
                 dto.nombre(),
                 dto.descripcion(),
-                null
+                resolverSubcategoria(dto.subcategoriaID())
         );
 
         Categoria guardada = categoriaRepository.save(categoria);
@@ -493,7 +530,7 @@ public class DonacionesService {
                 guardada.getId(),
                 guardada.getNombre(),
                 guardada.getDescripcion(),
-                null
+                idDeSubcategoria(guardada)
         );
     }
 
@@ -513,7 +550,7 @@ public class DonacionesService {
                 categoria.getId(),
                 categoria.getNombre(),
                 categoria.getDescripcion(),
-                null
+                idDeSubcategoria(categoria)
         );
     }
 
@@ -535,6 +572,7 @@ public class DonacionesService {
 
         if (dto.nombre() != null) categoria.setNombre(dto.nombre());
         if (dto.descripcion() != null) categoria.setDescripcion(dto.descripcion());
+        if (dto.subcategoriaID() != null) categoria.setSubcategoria(resolverSubcategoria(dto.subcategoriaID()));
 
         categoriaRepository.save(categoria);
 
@@ -542,7 +580,7 @@ public class DonacionesService {
                 .id(LogFields.CATEGORIA, categoriaID)
                 .emitir();
 
-        return new CategoriaDTO(categoria.getId(), categoria.getNombre(), categoria.getDescripcion(), null);
+        return new CategoriaDTO(categoria.getId(), categoria.getNombre(), categoria.getDescripcion(), idDeSubcategoria(categoria));
     }
 
     /**

@@ -171,6 +171,16 @@ public class ExcepcionHandler {
                 .body(respuesta.getBody().getDetail());
     }
 
+    /** Dos escrituras concurrentes sobre la misma fila (@Version): se pide reintentar. */
+    @ExceptionHandler(org.springframework.orm.ObjectOptimisticLockingFailureException.class)
+    public ResponseEntity<String> handleConflictoDeVersion(RuntimeException e) {
+        LOG.evento(EventoLog.VALIDATION_FAILED, "Conflicto de versión")
+           .dato("error.type", e.getClass().getSimpleName())
+           .outcome(Outcome.FAILURE).warn().emitir();
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body("El recurso fue modificado por otra operación; reintentar");
+    }
+
     // =========================
     // 500 - ERROR INTERNO
     // =========================

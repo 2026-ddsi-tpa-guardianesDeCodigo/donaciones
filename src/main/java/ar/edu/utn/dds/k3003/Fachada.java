@@ -69,6 +69,15 @@ public class Fachada implements FachadaDonaciones {
     return donacionesService.borrarProducto(productoID);
   }
 
+  public ar.edu.utn.dds.k3003.services.SubcategoriaDTO agregarSubcategoria(
+          ar.edu.utn.dds.k3003.services.SubcategoriaDTO dto) {
+    return donacionesService.agregarSubcategoria(dto);
+  }
+
+  public List<ar.edu.utn.dds.k3003.services.SubcategoriaDTO> listarSubcategorias() {
+    return donacionesService.listarSubcategorias();
+  }
+
   public CategoriaDTO agregarCategoria(CategoriaDTO dto) {
     meterRegistry.counter("negocio.donaciones.categorias.agregadas").increment();
     return donacionesService.agregarCategoria(dto);
