@@ -45,6 +45,11 @@
       <groupId>io.micrometer</groupId>
       <artifactId>micrometer-registry-datadog</artifactId>
     </dependency>
+    <!-- Publicación de eventos del modelo de lectura (CQRS, E6) en RabbitMQ/CloudAMQP. -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-amqp</artifactId>
+    </dependency>
     <!-- Appender de Better Stack para logging centralizado (logback-spring.xml). -->
     <dependency>
       <groupId>com.logtail</groupId>

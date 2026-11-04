@@ -19,6 +19,10 @@ public final class LogFields {
     public static final String MOTIVO = "motivo";
     public static final String CANTIDAD = "cantidad";
 
+    public static final String MSG_SYSTEM = "messaging.system";
+    public static final String MSG_DESTINATION = "messaging.destination.name";
+    public static final String MSG_OPERATION = "messaging.operation";
+
     private LogFields() {
     }
 }

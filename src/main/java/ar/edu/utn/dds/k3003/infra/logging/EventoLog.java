@@ -24,7 +24,13 @@ public enum EventoLog {
     IDENTIFICADOR_CREADO("identificador.creado"),
     IDENTIFICADOR_EDITADO("identificador.editado"),
     IDENTIFICADOR_BORRADO("identificador.borrado"),
-    DEBUG_RESET_EJECUTADO("debug.reset.ejecutado");
+    SUBCATEGORIA_CREADA("subcategoria.creada"),
+    DEBUG_RESET_EJECUTADO("debug.reset.ejecutado"),
+
+    // --- modelo de lectura (E6) ---
+    EVENTO_PUBLICADO("evento.publicado"),
+    EVENTO_PUBLICACION_FALLIDA("evento.publicacion.fallida"),
+    EVENTOS_REPUBLICADOS("eventos.republicados");
 
     private final String action;
 
