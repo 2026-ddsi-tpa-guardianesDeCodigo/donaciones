@@ -22,6 +22,7 @@ import org.springframework.web.client.HttpClientErrorException;
 
 import java.lang.reflect.Field;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -37,6 +38,7 @@ import static org.mockito.Mockito.*;
  *  - F3: registrarQuejaEnDonacion registraba la queja en Donadores (y pisaba la descripción de
  *    la donación) ANTES de validar que la donación estuviera ACEPTADA.
  *  - A3: PATCH /donaciones/estado no tenía ningún guard para volver a INGRESADA.
+ *  - Orden: los listados salían en el orden físico de la tabla, y la misión Ascendentes lo usa.
  */
 class DonacionesServiceTest {
 
@@ -149,5 +151,40 @@ class DonacionesServiceTest {
                 () -> service.cambiarEstadoDeDonacion(9L, EstadoDonacionEnum.INGRESADA));
 
         verify(donacionesRepository, never()).save(any());
+    }
+
+    // ---------------------------------------------------------------- Orden de ingreso
+
+    /** Postgres trae último lo que se actualizó último: entregar al revés invierte la lista. */
+    private void stubDonacionesDesordenadas() {
+        when(donacionesRepository.findAll()).thenReturn(List.of(
+                new Donacion(3L, "7", "1", "tercera", 3L, 3, EstadoDonacionEnum.ACEPTADA, LocalDate.of(2026, 11, 3)),
+                new Donacion(1L, "7", "1", "primera", 3L, 1, EstadoDonacionEnum.ACEPTADA, LocalDate.of(2026, 11, 1)),
+                new Donacion(2L, "7", "1", "segunda", 3L, 2, EstadoDonacionEnum.INGRESADA, LocalDate.of(2026, 11, 2))));
+    }
+
+    private static List<Long> ids(List<DonacionDTO> donaciones) {
+        return donaciones.stream().map(DonacionDTO::id).toList();
+    }
+
+    @Test
+    void buscarPorDonador_devuelveLasDonacionesEnOrdenDeIngreso() {
+        stubDonacionesDesordenadas();
+
+        assertEquals(List.of(1L, 2L, 3L), ids(service.buscarPorDonador(7L)));
+    }
+
+    @Test
+    void buscarPorDonadorYFechaInicio_devuelveLasDonacionesEnOrdenDeIngreso() {
+        stubDonacionesDesordenadas();
+
+        assertEquals(List.of(1L, 2L, 3L), ids(service.buscarPorDonadorYFechaInicio("7", LocalDate.of(2026, 1, 1))));
+    }
+
+    @Test
+    void listarDonaciones_devuelveLasDonacionesEnOrdenDeIngreso() {
+        stubDonacionesDesordenadas();
+
+        assertEquals(List.of(1L, 2L, 3L), ids(service.listarDonaciones()));
     }
 }

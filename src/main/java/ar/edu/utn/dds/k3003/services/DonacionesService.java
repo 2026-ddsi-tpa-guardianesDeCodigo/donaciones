@@ -17,7 +17,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 
 import java.time.LocalDate;
+import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Stream;
 
 @Service
 public class DonacionesService {
@@ -272,7 +274,7 @@ public class DonacionesService {
             throw new DonacionInvalidaException("Fecha invalida");
         }
 
-        return donacionesRepository.findAll().stream()
+        return donacionesEnOrdenDeIngreso()
                 .filter(d -> d.getDonadorID() != null)
                 .filter(d -> d.getDonadorID().trim().equals(donadorID.trim()))
                 .filter(d -> d.getFecha() != null)
@@ -330,7 +332,7 @@ public class DonacionesService {
         // Primero verifico que el donador exista
         donadoresClient.buscarDonadorPorID(String.valueOf(donadorID));
 
-        return donacionesRepository.findAll().stream()
+        return donacionesEnOrdenDeIngreso()
                 .filter(d -> d.getDonadorID() != null)
                 .filter(d -> d.getDonadorID().equals(String.valueOf(donadorID)))
                 .map(donacionMapper::toDonacionDTO)
@@ -725,7 +727,7 @@ public class DonacionesService {
     }
 
     public List<DonacionDTO> listarDonaciones() {
-        return donacionesRepository.findAll().stream()
+        return donacionesEnOrdenDeIngreso()
                 .map(donacionMapper::toDonacionDTO)
                 .toList();
     }
@@ -738,6 +740,13 @@ public class DonacionesService {
 
         LOG.evento(EventoLog.DEBUG_RESET_EJECUTADO, "Base de datos limpiada")
                 .warn().emitir();
+    }
+
+    // findAll() no garantiza orden: Postgres trae último lo que se actualizó último, así que al
+    // reportar una entrega la donación pasa al final. La misión Ascendentes de Incentivos compara
+    // las cantidades en el orden de esta lista, y el id es el orden en que ingresaron.
+    private Stream<Donacion> donacionesEnOrdenDeIngreso() {
+        return donacionesRepository.findAll().stream().sorted(Comparator.comparing(Donacion::getId));
     }
 
     private boolean esValidoSegunIdentificador(
